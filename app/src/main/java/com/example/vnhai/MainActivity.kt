@@ -274,8 +274,6 @@ fun GreetingPreview() {
     }
 }
 
-fun a() = {}
-
 @Preview(
     name = "2",
     showBackground = true)
