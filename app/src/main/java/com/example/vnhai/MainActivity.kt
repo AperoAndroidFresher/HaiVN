@@ -29,7 +29,11 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -56,7 +60,7 @@ data class Music(
     val duration: String,
 )
 
-var listMusic = listOf<Music>(
+val listMusic = listOf<Music>(
     Music(
         R.drawable.music1,
         "grainy days",
@@ -125,14 +129,16 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             VNHaiTheme {
-                var columnLayout by remember { mutableStateOf(true) }
+                var columnLayout by remember { mutableStateOf(false) }
+                var mutableListMusic by remember { mutableStateOf(listMusic) }
                 Screen(
                     columnLayout = columnLayout,
+                    listMusic = mutableListMusic,
                     onLayoutClick = {
                         columnLayout = !columnLayout
                     },
                     onSoftClick = {
-
+                        mutableListMusic = mutableListMusic.sortedBy { it.name }
                     }
                 )
             }
@@ -144,6 +150,7 @@ class MainActivity : ComponentActivity() {
 fun Screen(
     modifier: Modifier = Modifier,
     columnLayout: Boolean = true,
+    listMusic: List<Music>,
     onLayoutClick: () -> Unit = {},
     onSoftClick: () -> Unit = {}
     )
@@ -155,9 +162,8 @@ fun Screen(
         ){
             item {
                 Head(
-                    modifier = modifier.clickable(
-                        onClick = onLayoutClick
-                    ),
+                    modifier = Modifier
+                        .height(60.dp),
                     layoutIcon = R.drawable.grid_icon,
                     onLayoutClick = onLayoutClick,
                     onSoftClick = onSoftClick
@@ -181,6 +187,8 @@ fun Screen(
         ) {
             item(span = { GridItemSpan(maxLineSpan) }){
                 Head(
+                    modifier = Modifier
+                        .height(60.dp),
                     layoutIcon = R.drawable.column_icon,
                     onLayoutClick = onLayoutClick,
                     onSoftClick = onSoftClick
@@ -208,6 +216,7 @@ fun Head(
     Box(
         modifier = modifier
             .fillMaxWidth()
+            .padding(8.dp)
     )
     {
         Text(
@@ -215,24 +224,24 @@ fun Head(
                 .align(Alignment.Center),
             text = "My Playlist",
             fontWeight = FontWeight.Bold,
-            fontSize = 20.sp,
+            fontSize = 25.sp,
             color = Color.White
         )
         Row (
             modifier = modifier
-                .align(Alignment.BottomEnd)
+                .align(Alignment.CenterEnd)
                 .padding(
-                    horizontal = 8.dp
-                )
-                .wrapContentSize(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    end = 8.dp
+                ),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ){
             Icon(
                 modifier = Modifier
                     .clickable(
                         onClick =  onLayoutClick
-                    ),
+                    )
+                    .size(20.dp,20.dp),
                 painter = painterResource(layoutIcon),
                 contentDescription = "layout icon",
                 tint = Color.White
@@ -240,7 +249,8 @@ fun Head(
 
             Icon(
                 modifier = Modifier
-                    .clickable(onClick = onSoftClick),
+                    .clickable(onClick = onSoftClick)
+                    .size(25.dp, 25.dp),
                 painter = painterResource(R.drawable.soft_icon),
                 contentDescription = "soft_icon",
                 tint = Color.White
@@ -256,7 +266,8 @@ fun ColumnMusicLayout(
     music: Music = Music(R.drawable.music1,
         "grainy days",
         "moody",
-        "04:30")
+        "04:30"),
+    onKebabClick: ()->Unit = {}
 ){
     Row (
         modifier = modifier
@@ -305,6 +316,8 @@ fun ColumnMusicLayout(
                 )
                 Spacer(modifier = Modifier.width(10.dp))
                 Icon(
+                    modifier = Modifier
+                        .clickable (onClick = onKebabClick),
                     painter = painterResource(R.drawable.kebab_menu),
                     contentDescription = "Kebab menu",
                     tint = Color.White
@@ -322,7 +335,8 @@ fun GridMusicLayout(
         "grainy days",
         "moody",
         "04:30"
-    )
+    ),
+    onKebabClick: () -> Unit = {}
 ) {
     Column(
         modifier = modifier
@@ -346,7 +360,10 @@ fun GridMusicLayout(
                         color = Color.Black.copy(alpha = 0.7f),
                         shape = CircleShape
                     )
-                    .size(20.dp, 20.dp),
+                    .size(20.dp, 20.dp)
+                    .clickable(
+                        onClick = onKebabClick
+                    ),
                 painter = painterResource(R.drawable.kebab_menu),
                 contentDescription = "Kebab menu",
                 tint = Color.White
@@ -371,6 +388,30 @@ fun GridMusicLayout(
     }
 }
 
+@Composable
+fun KebabMenu() {
+    var expanded by remember { mutableStateOf(false) }
+    Box{
+        IconButton(onClick = { expanded = !expanded }) {
+            Icon(
+                painter = painterResource(R.drawable.kebab_menu),
+                contentDescription = "More options")
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            DropdownMenuItem(
+                text = { Text("Option 1") },
+                onClick = { /* Do something... */ },
+                leadingIcon = {
+
+                }
+            )
+        }
+    }
+}
+
 @Preview(
     name = "1",
     showBackground = true)
@@ -389,18 +430,18 @@ fun Preview1(
 //        onSoftClick = {  }
 //    )
 
-    var columnLayout by remember { mutableStateOf(false) }
+    VNHaiTheme {
+        var columnLayout by remember { mutableStateOf(true) }
 
-    Screen(
-        columnLayout = columnLayout,
-        onLayoutClick = {
-            columnLayout = !columnLayout
-            Log.d("MainActivity", "column Layout: $columnLayout")
-        },
-        onSoftClick = {
-
-        }
-    )
+        Screen(
+            columnLayout = columnLayout,
+            listMusic = listMusic,
+            onLayoutClick = {
+                columnLayout = !columnLayout
+            },
+            onSoftClick = {}
+        )
+    }
 }
 
 
