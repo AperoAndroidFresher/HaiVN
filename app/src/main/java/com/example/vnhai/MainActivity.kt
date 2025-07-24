@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,24 +20,44 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.core.text.isDigitsOnly
 import com.example.vnhai.ui.theme.VNHaiTheme
+import java.lang.Error
+
+fun String.onlyLetters() = all { it.isLetter() }
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,15 +65,35 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             VNHaiTheme {
-                Box()
+                val configuration = LocalConfiguration.current
+                val screenWidth = configuration.screenWidthDp
+                val screenHeight = configuration.screenHeightDp
+
+                var name by remember { mutableStateOf("") }
+                var phone by remember { mutableStateOf("") }
+                var universityName by remember { mutableStateOf("") }
+                var description by remember { mutableStateOf("") }
+
+                var visibleIcon by remember { mutableStateOf(true) }
+                var visibleDialog by remember { mutableStateOf(false) }
+                var hasNameError by remember { mutableStateOf(false) }
+                var hasUniversityNameError by remember { mutableStateOf(false) }
+
+                val focusManager = LocalFocusManager.current
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clickable {
+                            focusManager.clearFocus()
+                        }
+                )
                 {
                     Column (
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.SpaceBetween,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ){
-                        val onValueChange: (String)->Unit = {}
-                        val onClick: ()->Unit = {}
                         Box(
                             modifier = Modifier
                                 .weight(2f)
@@ -67,12 +108,14 @@ class MainActivity : ComponentActivity() {
                                 modifier = Modifier
                                     .align(Alignment.Center)
                             )
-                            Icon(
-                                painter = painterResource(R.drawable.icon),
-                                contentDescription = "Edit icon",
+                            MyEditIcon(
                                 modifier = Modifier
                                     .align(Alignment.TopEnd)
-                                    .fillMaxHeight()
+                                    .fillMaxHeight(),
+                                visible = visibleIcon,
+                                onClick = {
+                                    visibleIcon = false
+                                }
                             )
                         }
 
@@ -92,56 +135,106 @@ class MainActivity : ComponentActivity() {
                                 .weight(1f)
 
                             MyOutlinedTextField(
-                                "NAME",
-                                "Enter your name ....",
                                 modifier = modifier,
-                                onValueChange = onValueChange
+                                textContent = "NAME",
+                                outlineTextFieldContent = name,
+                                placeholder = "Enter your name...",
+                                isError = hasNameError,
+                                keyboardOptions = KeyboardOptions.Default.copy(
+                                    keyboardType = KeyboardType.Text,
+                                    imeAction = ImeAction.Done
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onDone = {
+                                        hasNameError = !name.onlyLetters()
+                                        if(!hasNameError)
+                                        {
+                                            focusManager.clearFocus()
+                                        }
+                                    }
+                                ),
+                                onValueChange = {
+                                    name = it
+                                }
                             )
 
                             Spacer(modifier = Modifier.weight(0.2f))
 
                             MyOutlinedTextField(
-                                "PHONE",
-                                "Enter your phone ....",
                                 modifier = modifier,
-                                onValueChange = onValueChange
+                                textContent = "PHONE",
+                                outlineTextFieldContent = phone,
+                                placeholder = "Enter your phone ....",
+                                keyboardOptions = KeyboardOptions.Default.copy(
+                                    keyboardType = KeyboardType.Number,
+                                    imeAction = ImeAction.Done
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onDone = {
+                                        focusManager.clearFocus()
+                                    },
+                                ),
+                                onValueChange = {
+                                    phone = it
+                                }
                             )
                         }
 
                         MyOutlinedTextField(
-                            "UNIVERSITY NAME",
-                            "Enter your university name ....",
                             modifier = Modifier
-                                .weight(2f)
-                                .align(Alignment.Start),
-                            onValueChange = onValueChange
+                                .weight(2f),
+                            textContent = "University Name",
+                            outlineTextFieldContent = universityName,
+                            placeholder = "Enter your university name ....",
+                            isError = hasUniversityNameError,
+                            keyboardOptions = KeyboardOptions.Default.copy(
+                                keyboardType = KeyboardType.Text,
+                                imeAction = ImeAction.Done
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onDone = {
+                                    hasUniversityNameError = !universityName.onlyLetters()
+                                    if(hasUniversityNameError)
+                                    {
+                                        focusManager.clearFocus()
+                                    }
+                                }
+                            ),
+                            onValueChange = {
+                                universityName = it
+                            }
                         )
 
                         MyOutlinedTextField(
-                            "DESCRIBE YOURSELF",
-                            "Enter a description about yourself ....",
                             modifier = Modifier
                                 .weight(4f)
                                 .align(Alignment.Start),
-                            onValueChange = onValueChange
+                            textContent = "DESCRIBE YOURSELF",
+                            outlineTextFieldContent = description,
+                            placeholder = "Enter a description about yourself ....",
+                            isSingleLine = false,
+                            keyboardOptions = KeyboardOptions.Default.copy(
+                                keyboardType = KeyboardType.Text,
+                                imeAction = ImeAction.Done
+                            ),
+                            onValueChange = {
+                                description = it
+                            }
                         )
 
-                        Button(
-                            onClick = {},
+                        MySubmitButton(
                             modifier = Modifier
                                 .weight(1f),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF2DA4DF)
-                            )
-                        ){
-                            Text(
-                                text = "SUBMIT",
-                                color = Color.White,
-                            )
-                        }
+                            visible = !visibleIcon,
+                            onClick = {
+                                visibleDialog = !(hasNameError && hasUniversityNameError)
+                            }
+                        )
                     }
-                    MyCustomDialog {  }
+                    MyCustomDialog(
+                        modifier = Modifier
+                            .height((screenHeight/3).dp)
+                    ) {  }
                 }
             }
         }
@@ -150,46 +243,60 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MyEditIcon(
-    visible: Boolean,
-    onClick: ()->Unit,
-    modifier: Modifier
+    modifier: Modifier = Modifier,
+    visible: Boolean = true,
+    onClick: ()->Unit = {}
 ) {
-    Icon(
-        painter = painterResource(R.drawable.icon),
-        contentDescription = "Edit icon",
-        modifier = modifier
-    )
+    if (visible)
+    {
+        Icon(
+            modifier = modifier
+                .clickable (
+                    onClick = onClick
+                ),
+            painter = painterResource(R.drawable.icon),
+            contentDescription = "Edit icon",
+        )
+    }
 }
 
 
 @Composable
 fun MySubmitButton(
-    visible: Boolean,
-    onClick: ()->Unit,
-    modifier: Modifier
+    modifier: Modifier = Modifier,
+    visible: Boolean = false,
+    onClick: ()->Unit = {}
 ){
-    Button(
-        onClick = {},
-        modifier = modifier,
-        shape = RoundedCornerShape(16.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = Color(0xFF2DA4DF)
-        )
-    ){
-        Text(
-            text = "SUBMIT",
-            color = Color.White,
-        )
+    if (visible)
+    {
+        Button(
+            onClick = onClick,
+            modifier = modifier,
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFF2DA4DF)
+            )
+        ){
+            Text(
+                text = "SUBMIT",
+                color = Color.White,
+            )
+        }
     }
 }
 
 @Composable
 fun MyOutlinedTextField(
-    textContent: String,
-    outlineTextFieldContent: String,
     modifier: Modifier = Modifier,
+    textContent: String = "",
+    outlineTextFieldContent: String = "",
+    placeholder: String = "",
+    isError: Boolean = false,
+    isSingleLine: Boolean = true,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
     color: Color = Color.Gray,
-    onValueChange: (String) -> Unit
+    onValueChange: (String) -> Unit = {}
 ) {
     Column (
         modifier = modifier
@@ -199,61 +306,81 @@ fun MyOutlinedTextField(
             text = textContent,
             modifier = Modifier
         )
-
         OutlinedTextField(
+            modifier = modifier
+                .fillMaxWidth(),
             value = outlineTextFieldContent,
+            placeholder = {
+                Text(
+                    text = placeholder,
+                    fontSize = 8.sp
+                ) },
+            isError = isError,
+            singleLine = isSingleLine,
+            keyboardOptions = keyboardOptions,
+            keyboardActions = keyboardActions,
             textStyle = TextStyle(color = color),
             onValueChange = onValueChange,
-            shape = RoundedCornerShape(20.dp),
-            modifier = modifier
-                .fillMaxWidth()
+            shape = RoundedCornerShape(20.dp)
         )
     }
 }
 
 @Composable
 fun MyCustomDialog(
-    visible: Boolean = false,
     modifier: Modifier = Modifier,
+    visible: Boolean = false,
     onDismissRequest: () -> Unit
 ) {
-    Dialog(onDismissRequest = { onDismissRequest() }) {
-        Card(
-            modifier = modifier
-                .background(
-                    color = Color.White,
-                    shape = RoundedCornerShape(16.dp)
-                )
-                .wrapContentSize(),
-            shape = RoundedCornerShape(16.dp),
+    if (visible)
+    {
+        Dialog(
+            onDismissRequest = { onDismissRequest() }
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.SpaceBetween
+            Card(
+                modifier = modifier
+                    .background(
+                        color = Color.White,
+                        shape = RoundedCornerShape(16.dp)
+                    )
+                    .wrapContentSize(),
+                shape = RoundedCornerShape(16.dp),
             ) {
-                Image(
-                    painter = painterResource(R.drawable.baseline_check_circle_24),
-                    contentDescription = "Checked Icon"
-                )
-                Text(
-                    text = "Success!",
-                    color = Color(0xFF4FA563),
-                    fontSize = 35.sp,
-                    modifier = Modifier.padding(16.dp)
-                )
-                Text(
-                    text = "Your information has been updated!",
-                    modifier = Modifier.padding(16.dp)
-                )
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                        .wrapContentSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Image(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(3f),
+                        painter = painterResource(R.drawable.baseline_check_circle_24),
+                        contentDescription = "Checked Icon"
+                    )
+                    Text(
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .wrapContentSize(),
+                        text = "Success!",
+                        color = Color(0xFF4FA563),
+                        fontSize = 35.sp,
+                    )
+                    Text(
+                        modifier = Modifier
+                            .padding(8.dp),
+                        text = "Your information has been updated!",
+                    )
+                }
             }
         }
     }
 }
 
 
-val a = {}
 @Preview(
     name = "1",
     showBackground = true)
@@ -261,9 +388,15 @@ val a = {}
 fun Preview1(
 
 ){
-    MyCustomDialog(
-        modifier = Modifier.width(125.dp)
-    ) { }
+    var name by remember { mutableStateOf("") }
+    MyOutlinedTextField(
+        textContent = "Name",
+        outlineTextFieldContent = name,
+        placeholder = "Enter your name",
+        onValueChange = {
+            name = it
+        }
+    )
 }
 
 
