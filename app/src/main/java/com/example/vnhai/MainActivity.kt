@@ -253,7 +253,6 @@ fun MyCustomDialog(
 }
 
 
-val a = {}
 @Preview(
     name = "1",
     showBackground = true)
