@@ -123,7 +123,7 @@ class MainActivity : ComponentActivity() {
                             painter = painterResource(R.drawable.cat),
                             contentDescription = "Avatar",
                             modifier = Modifier
-                                .weight(4f)
+                                .weight(3f)
                         )
 
                         Row (
@@ -139,6 +139,7 @@ class MainActivity : ComponentActivity() {
                                 textContent = "NAME",
                                 outlineTextFieldContent = name,
                                 placeholder = "Enter your name...",
+                                enabled = !visibleIcon,
                                 isError = hasNameError,
                                 keyboardOptions = KeyboardOptions.Default.copy(
                                     keyboardType = KeyboardType.Text,
@@ -165,6 +166,7 @@ class MainActivity : ComponentActivity() {
                                 textContent = "PHONE",
                                 outlineTextFieldContent = phone,
                                 placeholder = "Enter your phone ....",
+                                enabled = !visibleIcon,
                                 keyboardOptions = KeyboardOptions.Default.copy(
                                     keyboardType = KeyboardType.Number,
                                     imeAction = ImeAction.Done
@@ -186,6 +188,7 @@ class MainActivity : ComponentActivity() {
                             textContent = "University Name",
                             outlineTextFieldContent = universityName,
                             placeholder = "Enter your university name ....",
+                            enabled = !visibleIcon,
                             isError = hasUniversityNameError,
                             keyboardOptions = KeyboardOptions.Default.copy(
                                 keyboardType = KeyboardType.Text,
@@ -212,6 +215,7 @@ class MainActivity : ComponentActivity() {
                             textContent = "DESCRIBE YOURSELF",
                             outlineTextFieldContent = description,
                             placeholder = "Enter a description about yourself ....",
+                            enabled = !visibleIcon,
                             isSingleLine = false,
                             keyboardOptions = KeyboardOptions.Default.copy(
                                 keyboardType = KeyboardType.Text,
@@ -233,8 +237,13 @@ class MainActivity : ComponentActivity() {
                     }
                     MyCustomDialog(
                         modifier = Modifier
-                            .height((screenHeight/3).dp)
-                    ) {  }
+                            .height((screenHeight/3).dp),
+                        visible = visibleDialog,
+                        onDismissRequest = {
+                            visibleDialog = false
+                            visibleIcon = true
+                        }
+                    )
                 }
             }
         }
@@ -283,6 +292,10 @@ fun MySubmitButton(
             )
         }
     }
+    else
+    {
+        Spacer(modifier = modifier)
+    }
 }
 
 @Composable
@@ -291,6 +304,7 @@ fun MyOutlinedTextField(
     textContent: String = "",
     outlineTextFieldContent: String = "",
     placeholder: String = "",
+    enabled: Boolean = false,
     isError: Boolean = false,
     isSingleLine: Boolean = true,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
@@ -310,10 +324,11 @@ fun MyOutlinedTextField(
             modifier = modifier
                 .fillMaxWidth(),
             value = outlineTextFieldContent,
+            enabled = enabled,
             placeholder = {
                 Text(
                     text = placeholder,
-                    fontSize = 8.sp
+                    fontSize = 10.sp
                 ) },
             isError = isError,
             singleLine = isSingleLine,
@@ -335,7 +350,7 @@ fun MyCustomDialog(
     if (visible)
     {
         Dialog(
-            onDismissRequest = { onDismissRequest() }
+            onDismissRequest = onDismissRequest
         ) {
             Card(
                 modifier = modifier
