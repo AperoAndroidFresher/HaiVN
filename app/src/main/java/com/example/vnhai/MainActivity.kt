@@ -1,5 +1,6 @@
 package com.example.vnhai
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -37,6 +38,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -124,21 +126,27 @@ val listMusic = listOf<Music>(
 )
 
 class MainActivity : ComponentActivity() {
+    @SuppressLint("MutableCollectionMutableState")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             VNHaiTheme {
                 var columnLayout by remember { mutableStateOf(false) }
-                var mutableListMusic by remember { mutableStateOf(listMusic) }
+                var listMusicState by remember { mutableStateOf(listMusic) }
+                var mutableListMusic = listMusicState.toMutableList()
                 Screen(
                     columnLayout = columnLayout,
-                    listMusic = mutableListMusic,
+                    listMusic = listMusicState,
                     onLayoutClick = {
                         columnLayout = !columnLayout
                     },
                     onSoftClick = {
-                        mutableListMusic = mutableListMusic.sortedBy { it.name }
+                        listMusicState = listMusicState.sortedBy { it.name }
+                    },
+                    onDeleteClick = { it ->
+                        mutableListMusic.remove(it)
+                        listMusicState = mutableListMusic
                     }
                 )
             }
@@ -152,7 +160,8 @@ fun Screen(
     columnLayout: Boolean = true,
     listMusic: List<Music>,
     onLayoutClick: () -> Unit = {},
-    onSoftClick: () -> Unit = {}
+    onSoftClick: () -> Unit = {},
+    onDeleteClick: (music:Music) -> Unit = {},
     )
 {
     if (columnLayout)
@@ -173,7 +182,8 @@ fun Screen(
                     music -> ColumnMusicLayout(
                 modifier = Modifier
                     .fillMaxWidth(),
-                music = music)
+                music = music,
+                onDeleteClick = onDeleteClick)
             }
         }
     }
@@ -200,7 +210,8 @@ fun Screen(
                     .fillMaxWidth()
                     .fillMaxHeight()
                 ,
-                music = music)
+                music = music,
+                onDeleteClick = onDeleteClick)
             }
         }
     }
@@ -239,9 +250,9 @@ fun Head(
             Icon(
                 modifier = Modifier
                     .clickable(
-                        onClick =  onLayoutClick
+                        onClick = onLayoutClick
                     )
-                    .size(20.dp,20.dp),
+                    .size(20.dp, 20.dp),
                 painter = painterResource(layoutIcon),
                 contentDescription = "layout icon",
                 tint = Color.White
@@ -267,7 +278,7 @@ fun ColumnMusicLayout(
         "grainy days",
         "moody",
         "04:30"),
-    onKebabClick: ()->Unit = {}
+    onDeleteClick: (Music)->Unit = {}
 ){
     Row (
         modifier = modifier
@@ -315,12 +326,9 @@ fun ColumnMusicLayout(
                     color = Color.White
                 )
                 Spacer(modifier = Modifier.width(10.dp))
-                Icon(
-                    modifier = Modifier
-                        .clickable (onClick = onKebabClick),
-                    painter = painterResource(R.drawable.kebab_menu),
-                    contentDescription = "Kebab menu",
-                    tint = Color.White
+                KebabMenu(
+                    music = music,
+                    onDeleteClick = onDeleteClick
                 )
             }
         }
@@ -336,7 +344,7 @@ fun GridMusicLayout(
         "moody",
         "04:30"
     ),
-    onKebabClick: () -> Unit = {}
+    onDeleteClick: (Music) -> Unit = {}
 ) {
     Column(
         modifier = modifier
@@ -352,21 +360,11 @@ fun GridMusicLayout(
                 painter = painterResource(music.image),
                 contentDescription = "Avatar"
             )
-            Icon(
+            KebabMenu(
                 modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(4.dp)
-                    .background(
-                        color = Color.Black.copy(alpha = 0.7f),
-                        shape = CircleShape
-                    )
-                    .size(20.dp, 20.dp)
-                    .clickable(
-                        onClick = onKebabClick
-                    ),
-                painter = painterResource(R.drawable.kebab_menu),
-                contentDescription = "Kebab menu",
-                tint = Color.White
+                    .align(Alignment.TopEnd),
+                music = music,
+                onDeleteClick = onDeleteClick
             )
         }
         Text(
@@ -389,23 +387,46 @@ fun GridMusicLayout(
 }
 
 @Composable
-fun KebabMenu() {
+fun KebabMenu(
+    modifier: Modifier = Modifier,
+    music: Music,
+    onDeleteClick: (Music)->Unit = {}
+) {
     var expanded by remember { mutableStateOf(false) }
-    Box{
-        IconButton(onClick = { expanded = !expanded }) {
+    Box(
+        modifier = modifier
+            .padding(4.dp)
+    ){
+        IconButton(
+            modifier = modifier
+                .size(24.dp, 24.dp),
+            onClick = { expanded = !expanded }
+        ) {
             Icon(
+                modifier = modifier
+                    .size(20.dp, 20.dp)
+                    .background(
+                        color = Color.Black.copy(alpha = 0.7f),
+                        shape = CircleShape
+                    ),
                 painter = painterResource(R.drawable.kebab_menu),
-                contentDescription = "More options")
+                contentDescription = "Delete Icon",
+                tint = Color.White)
         }
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
             DropdownMenuItem(
-                text = { Text("Option 1") },
-                onClick = { /* Do something... */ },
+                text = { Text("Delete") },
+                onClick = {
+                    expanded = false
+                    onDeleteClick(music) },
                 leadingIcon = {
-
+                    Icon(
+                        painter = painterResource(R.drawable.baseline_delete_24),
+                        contentDescription = "leading delete icon"
+                    )
                 }
             )
         }
@@ -429,19 +450,7 @@ fun Preview1(
 //        },
 //        onSoftClick = {  }
 //    )
-
-    VNHaiTheme {
-        var columnLayout by remember { mutableStateOf(true) }
-
-        Screen(
-            columnLayout = columnLayout,
-            listMusic = listMusic,
-            onLayoutClick = {
-                columnLayout = !columnLayout
-            },
-            onSoftClick = {}
-        )
-    }
+    GridMusicLayout()
 }
 
 
