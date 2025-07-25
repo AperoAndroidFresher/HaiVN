@@ -2,33 +2,31 @@
 package com.example.vnhai
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -37,426 +35,541 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
+import androidx.navigation.NavHost
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.example.vnhai.ui.theme.VNHaiTheme
 
-fun String.onlyLetters() = all { it.isLetter() }
+fun String.onlyLetters() = all { it.isLetterOrDigit() }
+fun String.isValidateEmail() = endsWith("@apero.vn") && all { it.isLowerCase() || it=='_' || it.isDigit() }
+
+enum class AppScreen{
+    Loading, SignIn, SignUp
+}
+
+data class User(
+    val username: String,
+    val password: String
+)
+
+val user = User("hai", "admin")
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            var currentNighMode = isSystemInDarkTheme()
-            var darkTheme by remember { mutableStateOf(currentNighMode) }
-            VNHaiTheme(
-                darkTheme = darkTheme
-            ){
-                Screen(darkTheme = darkTheme,
-                    onThemeIconClick = {
-                        darkTheme = !darkTheme
+            var currentUser by remember { mutableStateOf(user)}
+
+            VNHaiTheme{
+                val navController: NavHostController = rememberNavController()
+
+                NavHost(
+                    navController = navController,
+                    startDestination = AppScreen.Loading.name
+                ) {
+                    composable(AppScreen.Loading.name){
+                        LoadingScreen()
                     }
-                )
+                    composable(AppScreen.SignIn.name) {
+                        SignInScreen(
+                            currentUser = currentUser,
+                            onSignUpTextClick = {navController.navigate(AppScreen.SignUp.name)}
+                        )
+                    }
+                    composable(AppScreen.SignUp.name) {
+                        SignUpScreen(
+                            currentUser = currentUser,
+                            onSignUpClick = {navController.navigate(AppScreen.SignIn.name)},
+                            saveCurrentUser = {currentUser = it}
+                        )
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-fun Screen(
-    darkTheme: Boolean,
-    onThemeIconClick: () -> Unit
+fun LoadingScreen(
+    modifier: Modifier = Modifier
+) {
+    Log.d("Main Activity", "Loading")
+    Column(
+        modifier = modifier
+            .fillMaxHeight()
+            .background(Color.Black)
+            .padding(
+                top = 170.dp
+            ),
+        verticalArrangement = Arrangement.Top,
+    ){
+        Image(
+            painterResource(R.drawable.logo_music_app),
+            contentDescription = "Logo music app",
+            modifier = Modifier.size(278.dp, 248.dp)
+        )
+
+        Text(
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally),
+            text = "Apero Music",
+            style = TextStyle(
+                fontSize = 40.sp,
+                fontWeight = FontWeight.Bold
+            ),
+            color = Color(0xFF427880)
+        )
+    }
+}
+
+
+@Composable
+fun SignUpScreen(
+    modifier: Modifier = Modifier,
+    currentUser: User = User("", ""),
+    saveCurrentUser: (User)->Unit = {},
+    onSignUpClick: () -> Unit = {}
+) {
+    var username by remember { mutableStateOf("")}
+    var password by remember { mutableStateOf("")}
+    var confirm by remember { mutableStateOf("")}
+    var email by remember { mutableStateOf("")}
+
+    var userError by remember { mutableStateOf(false)}
+    var passwordError by remember { mutableStateOf(false)}
+    var confirmError by remember { mutableStateOf(false)}
+    var emailError by remember { mutableStateOf(false)}
+
+    var passwordVisible by remember { mutableStateOf(false) }
+    var confirmVisible by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(Color.Black)
+            .padding(
+                top = 44.dp,
+                start = 20.dp,
+                end = 20.dp
+            ),
+        verticalArrangement = Arrangement.Top,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Image(
+            painterResource(R.drawable.logo_music_app),
+            contentDescription = "Logo music app",
+            modifier = Modifier.size(278.dp, 248.dp)
+        )
+        Text(
+            text = "Sign Up",
+            style = TextStyle(
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold
+            ),
+            color = Color.White
+        )
+        MyOutLineTextField(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 24.dp),
+            leadingIcon = R.drawable.user_icon,
+            isError = userError,
+            value = username,
+            placeholder = "Username",
+            onValueChange = {
+                username = it
+            },
+            onFocused = {string, bool -> username = string; userError = bool}
+        )
+
+        MyOutLineTextField(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding( top = 24.dp),
+            leadingIcon = R.drawable.password_icon,
+            isError = passwordError,
+            password = passwordVisible,
+            value = password,
+            containTrailing = true,
+            placeholder = "Password",
+            onValueChange = {
+                password = it
+            },
+            onTrailingIconClick = {
+                passwordVisible = !passwordVisible
+            },
+            onFocused = {string, bool -> password = string; passwordError = bool}
+        )
+
+        MyOutLineTextField(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding( top = 24.dp),
+            leadingIcon = R.drawable.password_icon,
+            isError = confirmError,
+            value = confirm,
+            containTrailing = true,
+            password = confirmVisible,
+            placeholder = "Confirm password",
+            onValueChange = {
+                confirm = it
+            },
+            onTrailingIconClick = {
+                confirmVisible = !confirmVisible
+            },
+            onFocused = {string, bool -> confirm = string; confirmError = bool}
+        )
+
+        MyOutLineTextField(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding( top = 24.dp),
+            leadingIcon = R.drawable.email_icon,
+            isError = emailError,
+            value = email,
+            placeholder = "Email",
+            onValueChange = {
+                email = it
+            },
+            onFocused = {string, bool -> email = string; emailError = bool}
+        )
+
+        Row (
+            modifier = modifier
+                .fillMaxSize()
+                .fillMaxWidth()
+                .padding(bottom = 50.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.Bottom
+        ){
+            MyButton(
+                modifier = modifier
+                    .fillMaxWidth()
+                    .padding(top = 20.dp),
+                text = "Sign Up",
+                onClick = {
+                    if(!username.onlyLetters())
+                    {
+                        userError = true
+                    }
+                    if(!password.onlyLetters())
+                    {
+                        passwordError = true
+                    }
+                    if(!confirm.onlyLetters() || confirm != password)
+                    {
+                        confirmError = true
+                    }
+                    if(!email.isValidateEmail())
+                    {
+                        emailError = true
+                    }
+                    if(!userError && !passwordError && !confirmError && !emailError)
+                    {
+                        onSignUpClick()
+                        saveCurrentUser(User(username, password))
+                    }
+                })
+        }
+    }
+}
+
+@Composable
+fun SignInScreen(
+    modifier: Modifier = Modifier,
+    currentUser: User = User("", ""),
+    onSignUpTextClick: () -> Unit = {}
 )
 {
-    val configuration = LocalConfiguration.current
-    val screenWidth = configuration.screenWidthDp
-    val screenHeight = configuration.screenHeightDp
+    var username by remember { mutableStateOf(currentUser.username)}
+    var password by remember { mutableStateOf(currentUser.password)}
+    var checked by remember { mutableStateOf(false)}
+    var passwordVisible by remember { mutableStateOf(false) }
 
-    var name by remember { mutableStateOf("") }
-    var phone by remember { mutableStateOf("") }
-    var universityName by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-
-    var visibleIcon by remember { mutableStateOf(true) }
-    var visibleDialog by remember { mutableStateOf(false) }
-    var hasNameError by remember { mutableStateOf(false) }
-    var hasUniversityNameError by remember { mutableStateOf(false) }
-
-    val focusManager = LocalFocusManager.current
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .clickable {
-                focusManager.clearFocus()
-            }
-            .background(
-                color = MaterialTheme.colorScheme.background
-            )
-
-    )
-    {
-        Column (
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.SpaceBetween,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ){
-            Box(
-                modifier = Modifier
-                    .weight(2f)
-                    .fillMaxWidth()
-                    .fillMaxHeight()
-            )
-            {
-                ThemeIcon(
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .fillMaxHeight(),
-                    darkTheme = darkTheme,
-                    onClick = onThemeIconClick
-                )
-                Text(
-                    text = "MY INFORMATION",
-                    fontSize  = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier
-                        .align(Alignment.Center),
-                    color = MaterialTheme.colorScheme.primary
-                )
-                MyEditIcon(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .fillMaxHeight(),
-                    visible = visibleIcon,
-                    onClick = {
-                        visibleIcon = false
-                    }
-                )
-            }
-
-            Image(
-                painter = painterResource(R.drawable.cat),
-                contentDescription = "Avatar",
-                modifier = Modifier
-                    .weight(3f)
-            )
-
-            Row (
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier
-                    .weight(1.5f)
-            ){
-                val modifier: Modifier = Modifier
-                    .weight(1f)
-
-                MyOutlinedTextField(
-                    modifier = modifier,
-                    textContent = "NAME",
-                    outlineTextFieldContent = name,
-                    placeholder = "Enter your name...",
-                    enabled = !visibleIcon,
-                    isError = hasNameError,
-                    keyboardOptions = KeyboardOptions.Default.copy(
-                        keyboardType = KeyboardType.Text,
-                        imeAction = ImeAction.Done
-                    ),
-                    keyboardActions = KeyboardActions(
-                        onDone = {
-                            hasNameError = !name.onlyLetters()
-                            if(!hasNameError)
-                            {
-                                focusManager.clearFocus()
-                            }
-                        }
-                    ),
-                    onValueChange = {
-                        name = it
-                    }
-                )
-
-                Spacer(modifier = Modifier.weight(0.1f))
-
-                MyOutlinedTextField(
-                    modifier = modifier,
-                    textContent = "PHONE",
-                    outlineTextFieldContent = phone,
-                    placeholder = "Enter your phone ....",
-                    enabled = !visibleIcon,
-                    keyboardOptions = KeyboardOptions.Default.copy(
-                        keyboardType = KeyboardType.Number,
-                        imeAction = ImeAction.Done
-                    ),
-                    keyboardActions = KeyboardActions(
-                        onDone = {
-                            focusManager.clearFocus()
-                        },
-                    ),
-                    onValueChange = {
-                        phone = it
-                    }
-                )
-            }
-
-            MyOutlinedTextField(
-                modifier = Modifier
-                    .weight(1.5f),
-                textContent = "University Name",
-                outlineTextFieldContent = universityName,
-                placeholder = "Enter your university name ....",
-                enabled = !visibleIcon,
-                isError = hasUniversityNameError,
-                keyboardOptions = KeyboardOptions.Default.copy(
-                    keyboardType = KeyboardType.Text,
-                    imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(
-                    onDone = {
-                        hasUniversityNameError = !universityName.onlyLetters()
-                        if(hasUniversityNameError)
-                        {
-                            focusManager.clearFocus()
-                        }
-                    }
-                ),
-                onValueChange = {
-                    universityName = it
-                }
-            )
-
-            MyOutlinedTextField(
-                modifier = Modifier
-                    .weight(4f)
-                    .align(Alignment.Start),
-                textContent = "DESCRIBE YOURSELF",
-                outlineTextFieldContent = description,
-                placeholder = "Enter a description about yourself ....",
-                enabled = !visibleIcon,
-                isSingleLine = false,
-                keyboardOptions = KeyboardOptions.Default.copy(
-                    keyboardType = KeyboardType.Text,
-                    imeAction = ImeAction.Done
-                ),
-                onValueChange = {
-                    description = it
-                }
-            )
-
-            MySubmitButton(
-                modifier = Modifier
-                    .weight(1f),
-                visible = !visibleIcon,
-                onClick = {
-                    visibleDialog = !(hasNameError && hasUniversityNameError)
-                }
-            )
-        }
-        MyCustomDialog(
-            modifier = Modifier
-                .height((screenHeight/3).dp),
-            visible = visibleDialog,
-            onDismissRequest = {
-                visibleDialog = false
-                visibleIcon = true
-            }
-        )
-    }
-}
-
-@Composable
-fun MyEditIcon(
-    modifier: Modifier = Modifier,
-    visible: Boolean = true,
-    onClick: ()->Unit = {}
-) {
-    if (visible)
-    {
-        Icon(
-            modifier = modifier
-                .clickable (
-                    onClick = onClick
-                ),
-            painter = painterResource(R.drawable.icon),
-            contentDescription = "Edit icon",
-            tint = MaterialTheme.colorScheme.primary
-        )
-    }
-}
-
-@Composable
-fun ThemeIcon(
-    modifier: Modifier = Modifier,
-    darkTheme: Boolean = false,
-    onClick: ()->Unit = {}
-) {
-    if (darkTheme)
-    {
-        Icon(
-            modifier = modifier
-                .clickable (
-                    onClick = onClick
-                ),
-            painter = painterResource(R.drawable.light_theme_icon),
-            contentDescription = "light icon",
-            tint = MaterialTheme.colorScheme.primary
-        )
-    }
-    else
-    {
-        Icon(
-            modifier = modifier
-                .clickable (
-                    onClick = onClick
-                ),
-            painter = painterResource(R.drawable.dark_theme_icon),
-            contentDescription = "dark icon",
-            tint = MaterialTheme.colorScheme.primary
-        )
-    }
-}
-
-@Composable
-fun MySubmitButton(
-    modifier: Modifier = Modifier,
-    visible: Boolean = false,
-    onClick: ()->Unit = {}
-){
-    if (visible)
-    {
-        Button(
-            onClick = onClick,
-            modifier = modifier,
-            shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.surfaceTint
-            )
-        ){
-            Text(
-                text = "SUBMIT",
-                color = MaterialTheme.colorScheme.onSecondary,
-            )
-        }
-    }
-    else
-    {
-        Spacer(modifier = modifier)
-    }
-}
-
-@Composable
-fun MyOutlinedTextField(
-    modifier: Modifier = Modifier,
-    textContent: String = "",
-    outlineTextFieldContent: String = "",
-    placeholder: String = "",
-    enabled: Boolean = false,
-    isError: Boolean = false,
-    isSingleLine: Boolean = true,
-    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
-    keyboardActions: KeyboardActions = KeyboardActions.Default,
-    color: Color = MaterialTheme.colorScheme.primary,
-    onValueChange: (String) -> Unit = {}
-) {
-    Column (
+    Column(
         modifier = modifier
-            .padding(4.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ){
+            .fillMaxSize()
+            .background(Color.Black)
+            .padding(
+                top = 44.dp,
+                start = 20.dp,
+                end = 20.dp
+            ),
+        verticalArrangement = Arrangement.Top,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Image(
+            painterResource(R.drawable.logo_music_app),
+            contentDescription = "Logo music app",
+            modifier = Modifier.size(278.dp, 248.dp)
+        )
         Text(
-            text = textContent,
-            color = MaterialTheme.colorScheme.primary
+            text = "Login to your account",
+            style = TextStyle(
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold
+            ),
+            color = Color.White
+        )
+        MyOutLineTextField(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp),
+            leadingIcon = R.drawable.user_icon,
+            value = username,
+            placeholder = "Username",
+            onValueChange = {
+                username = it
+            },
+            onFocused = {string, bool -> username = string}
         )
 
-        OutlinedTextField(
+        MyOutLineTextField(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding( top = 16.dp),
+            leadingIcon = R.drawable.password_icon,
+            value = password,
+            containTrailing = true,
+            password = passwordVisible,
+            placeholder = "Password",
+            onValueChange = {
+                password = it
+            },
+            onTrailingIconClick = {
+                passwordVisible = !passwordVisible
+            },
+            onFocused = {string, bool -> password = string;}
+        )
+
+        MyCheckBox(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    top = 20.dp,
+                    start = 8.dp
+                ),
+            checked = checked,
+            onCheckedChange = {
+                checked = it
+            }
+        )
+
+        MyButton(
             modifier = modifier
                 .fillMaxWidth()
-                .background(
-                    color = MaterialTheme.colorScheme.onSecondary,
-                    shape = RoundedCornerShape(20.dp)
+                .padding(top = 20.dp),
+            text = "Login",
+            onClick = {
+
+            }
+        )
+
+        LinkToSignUp(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(
+                    bottom = 50.dp
                 ),
-            value = outlineTextFieldContent,
-            enabled = enabled,
+            onSignUpClick = onSignUpTextClick
+        )
+    }
+
+}
+
+@Composable
+fun MyOutLineTextField(
+    modifier: Modifier = Modifier,
+    leadingIcon: Int = 0,
+    value: String = "",
+    password: Boolean = false,
+    placeholder: String = "",
+    isError: Boolean = false,
+    containTrailing: Boolean = false,
+    onTrailingIconClick: () -> Unit = {},
+    onValueChange: (String) -> Unit = {},
+    onFocused: (String, Boolean) -> Unit = {_, _ ->},
+){
+    val trailingIcon: Int = if(password)
+    {
+        R.drawable.eye_icon
+    }
+    else
+    {
+        R.drawable.hide_eye_icon
+    }
+    Column {
+        OutlinedTextField(
+            modifier = modifier
+                .height(59.dp)
+                .background(
+                    color = Color(0xff1e1e1e),
+                    shape = RoundedCornerShape(10.dp)
+                ).onFocusChanged{
+                    if(it.isFocused)
+                    {
+                        onFocused("", false)
+                    }
+                },
+            shape = RoundedCornerShape(10.dp),
+            value = value,
+            isError = isError,
+            textStyle = TextStyle(
+                color = Color.White
+            ),
+            leadingIcon = {
+                Icon(
+                    modifier = Modifier
+                        .size(12.dp),
+                    painter = painterResource(id = leadingIcon),
+                    contentDescription = "Icon",
+                )
+            },
+
             placeholder = {
                 Text(
                     text = placeholder,
-                    fontSize = 13.sp,
-                    color = MaterialTheme.colorScheme.primary
-                ) },
-            isError = isError,
-            singleLine = isSingleLine,
-            keyboardOptions = keyboardOptions,
-            keyboardActions = keyboardActions,
-            textStyle = TextStyle(color = color),
-            onValueChange = onValueChange,
-            shape = RoundedCornerShape(20.dp)
+                    fontWeight = FontWeight(400),
+                    fontSize = 16.sp,
+                )
+            },
+            visualTransformation = if (password || !containTrailing) VisualTransformation.None else PasswordVisualTransformation('*'),
+            trailingIcon = {
+                if(containTrailing)
+                {
+                    Icon(
+                        painter = painterResource(id = trailingIcon),
+                        contentDescription = "Icon",
+                        modifier = Modifier
+                            .clickable(onClick = onTrailingIconClick)
+                            .size(17.dp)
+                    )
+                }
+            },
+            onValueChange = onValueChange
+        )
+
+        if (isError)
+        {
+            Text(
+                modifier = Modifier
+                    .padding(start = 16.dp)
+                    .background(
+                        color = Color.Black
+                    ),
+                text = "Invalid format",
+                fontSize = 12.sp,
+                fontWeight = FontWeight(400),
+                color = Color.Red
+            )
+        }
+    }
+}
+
+@Composable
+fun MyCheckBox(
+    modifier: Modifier = Modifier,
+    checked: Boolean = false,
+    onCheckedChange: (Boolean) -> Unit = {}
+) {
+    Row (
+        modifier = modifier
+            .size(150.dp, 18.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ){
+        Checkbox(
+            checked = checked,
+            colors = CheckboxDefaults.colors(
+                checkedColor = Color(0xff00c2cb),
+                uncheckedColor = Color(0xff00c2cb),
+                checkmarkColor = Color.White
+            ),
+            onCheckedChange = onCheckedChange
+        )
+        Text(
+            text = "Remember me",
+            fontWeight = FontWeight.Bold,
+            fontSize = 12.sp,
+            color = Color.White
         )
     }
 }
 
 @Composable
-fun MyCustomDialog(
+fun MyButton(
     modifier: Modifier = Modifier,
-    visible: Boolean = false,
-    onDismissRequest: () -> Unit
+    text: String = "",
+    onClick: () -> Unit = {}
 ) {
-    if (visible)
-    {
-        Dialog(
-            onDismissRequest = onDismissRequest
-        ) {
-            Card(
-                modifier = modifier
-                    .background(
-                        color = Color.White,
-                        shape = RoundedCornerShape(16.dp)
-                    )
-                    .wrapContentSize(),
-                shape = RoundedCornerShape(16.dp),
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp)
-                        .wrapContentSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Image(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(3f),
-                        painter = painterResource(R.drawable.baseline_check_circle_24),
-                        contentDescription = "Checked Icon"
-                    )
-                    Text(
-                        modifier = Modifier
-                            .padding(8.dp)
-                            .wrapContentSize(),
-                        text = "Success!",
-                        color = Color(0xFF4FA563),
-                        fontSize = 35.sp,
-                    )
-                    Text(
-                        modifier = Modifier
-                            .padding(8.dp),
-                        text = "Your information has been updated!",
-                    )
-                }
-            }
-        }
+    Button(
+        modifier = modifier
+            .height(59.dp)
+            .fillMaxWidth()
+            .background(
+                color = Color(0xff06A0B5),
+                shape = RoundedCornerShape(50.dp)
+            ),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color(0xff06A0B5)
+        ),
+        onClick = onClick
+    ) {
+        Text(
+            textAlign = TextAlign.Center,
+            text = text,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold
+        )
     }
 }
 
+@Composable
+fun LinkToSignUp(
+    modifier: Modifier,
+    onSignUpClick: () -> Unit
+){
+    Row (
+        modifier = modifier
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.Bottom
+    ){
+        Text(
+            text = "Don't have an account?",
+            fontSize = 16.sp,
+            color = Color.White
+        )
+
+        Text(
+            modifier = Modifier
+                .clickable(
+                    onClick = onSignUpClick
+                ),
+            text = "Sign Up",
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xff06A0B5)
+        )
+    }
+}
 
 @Preview(
     name = "1",
@@ -465,5 +578,6 @@ fun MyCustomDialog(
 fun Preview1(
 
 ){
-    MyOutlinedTextField()
+    SignUpScreen()
 }
+
