@@ -2,10 +2,10 @@
 package com.example.vnhai
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -19,28 +19,24 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -49,18 +45,24 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavHost
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.vnhai.ui.theme.VNHaiTheme
+import kotlinx.coroutines.delay
 
 fun String.onlyLetters() = all { it.isLetterOrDigit() }
-fun String.isValidateEmail() = endsWith("@apero.vn") && all { it.isLowerCase() || it=='_' || it.isDigit() }
+fun String.isValidateEmail() = endsWith("@apero.vn") &&
+        subSequence(0,lastIndexOf("@apero.vn")).all { it.isLowerCase() || it=='_' || it.isDigit() }
+
+fun checkUserName(name: String): Boolean
+{
+    return listUser.all { user -> user.username != name.lowercase() }
+}
 
 enum class AppScreen{
-    Loading, SignIn, SignUp
+    SignIn, SignUp
 }
 
 data class User(
@@ -68,36 +70,63 @@ data class User(
     val password: String
 )
 
-val user = User("hai", "admin")
+var listUser = mutableListOf(User("hai", "hai@apero.vn"))
+
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            var currentUser by remember { mutableStateOf(user)}
+            VNHaiTheme {
+                App(
+                    modifier = Modifier
+                        .fillMaxSize()
+                )
+            }
+        }
+    }
+}
 
-            VNHaiTheme{
-                val navController: NavHostController = rememberNavController()
-
+@Composable
+fun App(
+    modifier: Modifier = Modifier,
+    navController: NavHostController = rememberNavController()
+){
+    var start by remember { mutableStateOf(true) }
+    AnimatedContent(
+        targetState = start,
+        label = "animated content"
+    ) { targetCount ->
+        when(targetCount)
+        {
+            true -> {
+                LoadingScreen(modifier = Modifier.fillMaxWidth())
+                LaunchedEffect(Unit) {
+                    delay(2000)
+                    start = false
+                }
+            }
+            false ->
+            {
                 NavHost(
+                    modifier = modifier,
                     navController = navController,
-                    startDestination = AppScreen.Loading.name
+                    startDestination = AppScreen.SignIn.name
                 ) {
-                    composable(AppScreen.Loading.name){
-                        LoadingScreen()
-                    }
                     composable(AppScreen.SignIn.name) {
                         SignInScreen(
-                            currentUser = currentUser,
+                            currentUser = listUser.last(),
                             onSignUpTextClick = {navController.navigate(AppScreen.SignUp.name)}
                         )
                     }
                     composable(AppScreen.SignUp.name) {
                         SignUpScreen(
-                            currentUser = currentUser,
+                            saveCurrentUser = { user ->
+                                listUser.add(user)
+                            },
                             onSignUpClick = {navController.navigate(AppScreen.SignIn.name)},
-                            saveCurrentUser = {currentUser = it}
                         )
                     }
                 }
@@ -110,7 +139,6 @@ class MainActivity : ComponentActivity() {
 fun LoadingScreen(
     modifier: Modifier = Modifier
 ) {
-    Log.d("Main Activity", "Loading")
     Column(
         modifier = modifier
             .fillMaxHeight()
@@ -119,6 +147,7 @@ fun LoadingScreen(
                 top = 170.dp
             ),
         verticalArrangement = Arrangement.Top,
+        horizontalAlignment = Alignment.CenterHorizontally
     ){
         Image(
             painterResource(R.drawable.logo_music_app),
@@ -283,8 +312,15 @@ fun SignUpScreen(
                     }
                     if(!userError && !passwordError && !confirmError && !emailError)
                     {
-                        onSignUpClick()
-                        saveCurrentUser(User(username, password))
+                        if(checkUserName(username))
+                        {
+                            onSignUpClick()
+                            saveCurrentUser(User(username, password))
+                        }
+                        else
+                        {
+                            userError = true
+                        }
                     }
                 })
         }
