@@ -2,7 +2,6 @@
 package com.example.vnhai
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -63,44 +62,13 @@ enum class AppScreen{
     Loading, SignIn, SignUp
 }
 
-data class User(
-    val username: String,
-    val password: String
-)
-
-val user = User("hai", "admin")
-
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            var currentUser by remember { mutableStateOf(user)}
-
             VNHaiTheme{
-                val navController: NavHostController = rememberNavController()
-
-                NavHost(
-                    navController = navController,
-                    startDestination = AppScreen.Loading.name
-                ) {
-                    composable(AppScreen.Loading.name){
-                        LoadingScreen()
-                    }
-                    composable(AppScreen.SignIn.name) {
-                        SignInScreen(
-                            currentUser = currentUser,
-                            onSignUpTextClick = {navController.navigate(AppScreen.SignUp.name)}
-                        )
-                    }
-                    composable(AppScreen.SignUp.name) {
-                        SignUpScreen(
-                            currentUser = currentUser,
-                            onSignUpClick = {navController.navigate(AppScreen.SignIn.name)},
-                            saveCurrentUser = {currentUser = it}
-                        )
-                    }
-                }
+                
             }
         }
     }
@@ -110,7 +78,6 @@ class MainActivity : ComponentActivity() {
 fun LoadingScreen(
     modifier: Modifier = Modifier
 ) {
-    Log.d("Main Activity", "Loading")
     Column(
         modifier = modifier
             .fillMaxHeight()
@@ -143,8 +110,6 @@ fun LoadingScreen(
 @Composable
 fun SignUpScreen(
     modifier: Modifier = Modifier,
-    currentUser: User = User("", ""),
-    saveCurrentUser: (User)->Unit = {},
     onSignUpClick: () -> Unit = {}
 ) {
     var username by remember { mutableStateOf("")}
@@ -284,7 +249,6 @@ fun SignUpScreen(
                     if(!userError && !passwordError && !confirmError && !emailError)
                     {
                         onSignUpClick()
-                        saveCurrentUser(User(username, password))
                     }
                 })
         }
@@ -294,12 +258,11 @@ fun SignUpScreen(
 @Composable
 fun SignInScreen(
     modifier: Modifier = Modifier,
-    currentUser: User = User("", ""),
     onSignUpTextClick: () -> Unit = {}
 )
 {
-    var username by remember { mutableStateOf(currentUser.username)}
-    var password by remember { mutableStateOf(currentUser.password)}
+    var username by remember { mutableStateOf("")}
+    var password by remember { mutableStateOf("")}
     var checked by remember { mutableStateOf(false)}
     var passwordVisible by remember { mutableStateOf(false) }
 
