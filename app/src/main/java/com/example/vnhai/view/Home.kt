@@ -123,9 +123,3 @@ fun BottomHomeBar(
         }
     }
 }
-
-@Preview
-@Composable
-fun Preview(){
-    Home()
-}

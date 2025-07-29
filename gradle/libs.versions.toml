@@ -1,5 +1,9 @@
 [versions]
 agp = "8.10.1"
+coilCompose = "2.7.0"
+coilComposeVersion = "3.3.0"
+coilKtCoilCompose = "2.5.0"
+coilKtCoilComposeVersion = "2.4.0"
 kotlin = "2.0.21"
 coreKtx = "1.16.0"
 junit = "4.13.2"
@@ -13,10 +17,15 @@ navigationCompose = "2.9.2"
 navigationRuntimeAndroid = "2.9.2"
 navigationComposeJvmstubs = "2.9.2"
 navigation3UiAndroid = "1.0.0-alpha05"
+volley = "1.2.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
+coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilCompose" }
+coil-compose-v250 = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilKtCoilCompose" }
+coil-compose-v330 = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilComposeVersion" }
+coil-kt-coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilKtCoilComposeVersion" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
@@ -34,6 +43,7 @@ androidx-adaptive-android = { group = "androidx.compose.material3.adaptive", nam
 androidx-navigation-runtime-android = { group = "androidx.navigation", name = "navigation-runtime-android", version.ref = "navigationRuntimeAndroid" }
 androidx-navigation-compose-jvmstubs = { group = "androidx.navigation", name = "navigation-compose-jvmstubs", version.ref = "navigationComposeJvmstubs" }
 androidx-navigation3-ui-android = { group = "androidx.navigation3", name = "navigation3-ui-android", version.ref = "navigation3UiAndroid" }
+volley = { group = "com.android.volley", name = "volley", version.ref = "volley" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

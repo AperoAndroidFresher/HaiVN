@@ -516,13 +516,3 @@ fun LinkToSignUp(
     }
 }
 
-@Preview(
-    name = "1",
-    showBackground = true)
-@Composable
-fun Preview1(
-
-){
-    SignUpScreen()
-}
-

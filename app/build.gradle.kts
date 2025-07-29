@@ -40,7 +40,7 @@ android {
 }
 
 dependencies {
-
+    implementation(libs.coil.kt.coil.compose)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -53,6 +53,7 @@ dependencies {
     implementation(libs.androidx.adaptive.android)
     implementation(libs.androidx.navigation.runtime.android)
     implementation(libs.androidx.navigation3.ui.android)
+    implementation(libs.volley)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

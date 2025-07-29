@@ -1,5 +1,9 @@
 package com.example.vnhai.view
 
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -8,12 +12,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -21,6 +26,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,17 +36,24 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import com.android.volley.toolbox.ImageLoader
 import com.example.vnhai.R
 import com.example.vnhai.onlyLetters
 
@@ -87,27 +100,30 @@ fun Screen(
     )
     {
         Column (
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(
+                top = 50.dp,
+                start = 16.dp,
+                end = 16.dp,
+                bottom = 16.dp),
             verticalArrangement = Arrangement.SpaceBetween,
             horizontalAlignment = Alignment.CenterHorizontally
         ){
             Box(
                 modifier = Modifier
-                    .weight(2f)
+                    .height(50.dp)
                     .fillMaxWidth()
-                    .fillMaxHeight()
             )
             {
                 ThemeIcon(
                     modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .fillMaxHeight(),
+                        .size(35.dp)
+                        .align(Alignment.CenterStart),
                     darkTheme = darkTheme,
                     onClick = onThemeIconClick
                 )
                 Text(
                     text = "MY INFORMATION",
-                    fontSize  = 20.sp,
+                    fontSize  = 28.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier
                         .align(Alignment.Center),
@@ -115,8 +131,8 @@ fun Screen(
                 )
                 MyEditIcon(
                     modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .fillMaxHeight(),
+                        .size(35.dp)
+                        .align(Alignment.CenterEnd),
                     visible = visibleIcon,
                     onClick = {
                         visibleIcon = false
@@ -124,17 +140,14 @@ fun Screen(
                 )
             }
 
-            Image(
-                painter = painterResource(R.drawable.cat),
-                contentDescription = "Avatar",
-                modifier = Modifier
-                    .weight(3f)
-            )
+            MyAvatar(
+                modifier = Modifier.size(150.dp),
+                enabled = !visibleIcon)
 
             Row (
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier
-                    .weight(1.5f)
+                    .height(90.dp)
             ){
                 val modifier: Modifier = Modifier
                     .weight(1f)
@@ -143,7 +156,7 @@ fun Screen(
                     modifier = modifier,
                     textContent = "NAME",
                     outlineTextFieldContent = name,
-                    placeholder = "Enter your name...",
+                    placeholder = "Enter your name",
                     enabled = !visibleIcon,
                     isError = hasNameError,
                     keyboardOptions = KeyboardOptions.Default.copy(
@@ -164,13 +177,13 @@ fun Screen(
                     }
                 )
 
-                Spacer(modifier = Modifier.weight(0.1f))
+                Spacer(modifier = Modifier.weight(0.05f))
 
                 MyOutlinedTextField(
                     modifier = modifier,
                     textContent = "PHONE",
                     outlineTextFieldContent = phone,
-                    placeholder = "Enter your phone ....",
+                    placeholder = "Enter your phone",
                     enabled = !visibleIcon,
                     keyboardOptions = KeyboardOptions.Default.copy(
                         keyboardType = KeyboardType.Number,
@@ -189,7 +202,7 @@ fun Screen(
 
             MyOutlinedTextField(
                 modifier = Modifier
-                    .weight(1.5f),
+                    .height(90.dp),
                 textContent = "University Name",
                 outlineTextFieldContent = universityName,
                 placeholder = "Enter your university name ....",
@@ -215,7 +228,7 @@ fun Screen(
 
             MyOutlinedTextField(
                 modifier = Modifier
-                    .weight(4f)
+                    .height(150.dp)
                     .align(Alignment.Start),
                 textContent = "DESCRIBE YOURSELF",
                 outlineTextFieldContent = description,
@@ -233,7 +246,7 @@ fun Screen(
 
             MySubmitButton(
                 modifier = Modifier
-                    .weight(1f),
+                    .height(100.dp),
                 visible = !visibleIcon,
                 onClick = {
                     visibleDialog = !(hasNameError && hasUniversityNameError)
@@ -242,7 +255,7 @@ fun Screen(
         }
         MyCustomDialog(
             modifier = Modifier
-                .height(338.dp),
+                .height(250.dp),
             visible = visibleDialog,
             onDismissRequest = {
                 visibleDialog = false
@@ -305,32 +318,90 @@ fun ThemeIcon(
 }
 
 @Composable
-fun MySubmitButton(
+fun MyAvatar(
     modifier: Modifier = Modifier,
-    visible: Boolean = false,
-    onClick: ()->Unit = {}
-){
-    if (visible)
-    {
-        Button(
-            onClick = onClick,
-            modifier = modifier,
-            shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.surfaceTint
+    enabled: Boolean = false
+) {
+    var link by remember { mutableStateOf("") }
+    val pickMedia = rememberLauncherForActivityResult(PickVisualMedia()) { uri ->
+        // Callback is invoked after the user selects a media item or closes the
+        // photo picker.
+        if (uri != null) {
+            link = uri.toString()
+        } else {
+            Log.d("Main Activity", "No media selected")
+        }
+    }
+
+    Box(
+        modifier = modifier
+            .padding(15.dp)
+    ){
+        if(link != ""){
+            MyImageFromUri(
+                modifier = Modifier
+                    .size(125.dp)
+                    .padding(
+                        start = 12.dp,
+                        end = 12.dp,
+                        bottom = 12.dp),
+                link
             )
-        ){
-            Text(
-                text = "SUBMIT",
-                color = MaterialTheme.colorScheme.onSecondary,
+        }
+        else
+        {
+            Image(
+                modifier = Modifier
+                    .size(125.dp)
+                    .padding(bottom = 12.dp),
+                painter = painterResource(R.drawable.cat),
+                contentDescription = "Avatar"
+            )
+        }
+
+        if(enabled)
+        {
+            Icon(
+                modifier = Modifier
+                    .size(30.dp)
+                    .align(alignment = Alignment.BottomCenter)
+                    .background(
+                        color = MaterialTheme.colorScheme.background.copy(alpha = 0.7f),
+                        shape = CircleShape
+                    )
+                    .padding(5.dp)
+                    .clickable(
+                        onClick = {
+                            // Launch the photo picker and let the user choose only images.
+                            pickMedia.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))
+                        }
+                    ),
+                painter = painterResource(R.drawable.camera_icon),
+                contentDescription = "Camera icon",
+                tint = MaterialTheme.colorScheme.onBackground
             )
         }
     }
-    else
-    {
-        Spacer(modifier = modifier)
-    }
 }
+
+@Composable
+fun MyImageFromUri(
+    modifier: Modifier = Modifier,
+    uri: String
+) {
+    AsyncImage(
+        modifier = modifier
+            .clip(CircleShape),
+        model = ImageRequest.Builder(LocalContext.current)
+            .data(uri)
+            .size(300)
+            .crossfade(true)
+            .build(),
+        contentDescription = "Avatar",
+        contentScale = ContentScale.Crop,
+    )
+}
+
 
 @Composable
 fun MyOutlinedTextField(
@@ -368,19 +439,48 @@ fun MyOutlinedTextField(
             placeholder = {
                 Text(
                     text = placeholder,
-                    fontSize = 13.sp,
-                    color = MaterialTheme.colorScheme.primary
                 ) },
             isError = isError,
             singleLine = isSingleLine,
             keyboardOptions = keyboardOptions,
             keyboardActions = keyboardActions,
-            textStyle = TextStyle(color = color),
+            textStyle = TextStyle(
+                color = MaterialTheme.colorScheme.primary,
+                fontSize = 8.sp),
             onValueChange = onValueChange,
             shape = RoundedCornerShape(20.dp)
         )
     }
 }
+
+@Composable
+fun MySubmitButton(
+    modifier: Modifier = Modifier,
+    visible: Boolean = false,
+    onClick: ()->Unit = {}
+){
+    if (visible)
+    {
+        Button(
+            onClick = onClick,
+            modifier = modifier,
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.surfaceTint
+            )
+        ){
+            Text(
+                text = "SUBMIT",
+                color = MaterialTheme.colorScheme.onSecondary,
+            )
+        }
+    }
+    else
+    {
+        Spacer(modifier = modifier)
+    }
+}
+
 
 @Composable
 fun MyCustomDialog(
@@ -434,4 +534,17 @@ fun MyCustomDialog(
             }
         }
     }
+}
+
+@Preview(
+    name = "1",
+    showBackground = true)
+@Composable
+fun Preview1(
+
+){
+    Profile(
+        darkTheme = false,
+        onThemeIconClick = {  }
+    )
 }
