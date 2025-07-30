@@ -1,9 +1,9 @@
-package com.example.vnhai.view
+package com.example.vnhai.feature.profile
 
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -37,7 +37,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -53,10 +52,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.android.volley.toolbox.ImageLoader
 import com.example.vnhai.R
 import com.example.vnhai.onlyLetters
-
 
 @Composable
 fun Profile(
@@ -88,7 +85,7 @@ fun Screen(
     val focusManager = LocalFocusManager.current
 
     Box(
-        modifier = Modifier
+        modifier = Modifier.Companion
             .fillMaxSize()
             .clickable {
                 focusManager.clearFocus()
@@ -99,40 +96,41 @@ fun Screen(
 
     )
     {
-        Column (
-            modifier = Modifier.padding(
+        Column(
+            modifier = Modifier.Companion.padding(
                 top = 50.dp,
                 start = 16.dp,
                 end = 16.dp,
-                bottom = 16.dp),
+                bottom = 16.dp
+            ),
             verticalArrangement = Arrangement.SpaceBetween,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ){
+            horizontalAlignment = Alignment.Companion.CenterHorizontally
+        ) {
             Box(
-                modifier = Modifier
+                modifier = Modifier.Companion
                     .height(50.dp)
                     .fillMaxWidth()
             )
             {
                 ThemeIcon(
-                    modifier = Modifier
+                    modifier = Modifier.Companion
                         .size(35.dp)
-                        .align(Alignment.CenterStart),
+                        .align(Alignment.Companion.CenterStart),
                     darkTheme = darkTheme,
                     onClick = onThemeIconClick
                 )
                 Text(
                     text = "MY INFORMATION",
-                    fontSize  = 28.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier
-                        .align(Alignment.Center),
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Companion.Bold,
+                    modifier = Modifier.Companion
+                        .align(Alignment.Companion.Center),
                     color = MaterialTheme.colorScheme.primary
                 )
                 MyEditIcon(
-                    modifier = Modifier
+                    modifier = Modifier.Companion
                         .size(35.dp)
-                        .align(Alignment.CenterEnd),
+                        .align(Alignment.Companion.CenterEnd),
                     visible = visibleIcon,
                     onClick = {
                         visibleIcon = false
@@ -141,15 +139,16 @@ fun Screen(
             }
 
             MyAvatar(
-                modifier = Modifier.size(150.dp),
-                enabled = !visibleIcon)
+                modifier = Modifier.Companion.size(150.dp),
+                enabled = !visibleIcon
+            )
 
-            Row (
+            Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier
+                modifier = Modifier.Companion
                     .height(90.dp)
-            ){
-                val modifier: Modifier = Modifier
+            ) {
+                val modifier: Modifier = Modifier.Companion
                     .weight(1f)
 
                 MyOutlinedTextField(
@@ -159,15 +158,14 @@ fun Screen(
                     placeholder = "Enter your name",
                     enabled = !visibleIcon,
                     isError = hasNameError,
-                    keyboardOptions = KeyboardOptions.Default.copy(
-                        keyboardType = KeyboardType.Text,
-                        imeAction = ImeAction.Done
+                    keyboardOptions = KeyboardOptions.Companion.Default.copy(
+                        keyboardType = KeyboardType.Companion.Text,
+                        imeAction = ImeAction.Companion.Done
                     ),
                     keyboardActions = KeyboardActions(
                         onDone = {
                             hasNameError = !name.onlyLetters()
-                            if(!hasNameError)
-                            {
+                            if (!hasNameError) {
                                 focusManager.clearFocus()
                             }
                         }
@@ -177,7 +175,7 @@ fun Screen(
                     }
                 )
 
-                Spacer(modifier = Modifier.weight(0.05f))
+                Spacer(modifier = Modifier.Companion.weight(0.05f))
 
                 MyOutlinedTextField(
                     modifier = modifier,
@@ -185,9 +183,9 @@ fun Screen(
                     outlineTextFieldContent = phone,
                     placeholder = "Enter your phone",
                     enabled = !visibleIcon,
-                    keyboardOptions = KeyboardOptions.Default.copy(
-                        keyboardType = KeyboardType.Number,
-                        imeAction = ImeAction.Done
+                    keyboardOptions = KeyboardOptions.Companion.Default.copy(
+                        keyboardType = KeyboardType.Companion.Number,
+                        imeAction = ImeAction.Companion.Done
                     ),
                     keyboardActions = KeyboardActions(
                         onDone = {
@@ -201,22 +199,21 @@ fun Screen(
             }
 
             MyOutlinedTextField(
-                modifier = Modifier
+                modifier = Modifier.Companion
                     .height(90.dp),
                 textContent = "University Name",
                 outlineTextFieldContent = universityName,
                 placeholder = "Enter your university name ....",
                 enabled = !visibleIcon,
                 isError = hasUniversityNameError,
-                keyboardOptions = KeyboardOptions.Default.copy(
-                    keyboardType = KeyboardType.Text,
-                    imeAction = ImeAction.Done
+                keyboardOptions = KeyboardOptions.Companion.Default.copy(
+                    keyboardType = KeyboardType.Companion.Text,
+                    imeAction = ImeAction.Companion.Done
                 ),
                 keyboardActions = KeyboardActions(
                     onDone = {
                         hasUniversityNameError = !universityName.onlyLetters()
-                        if(hasUniversityNameError)
-                        {
+                        if (hasUniversityNameError) {
                             focusManager.clearFocus()
                         }
                     }
@@ -227,17 +224,17 @@ fun Screen(
             )
 
             MyOutlinedTextField(
-                modifier = Modifier
+                modifier = Modifier.Companion
                     .height(150.dp)
-                    .align(Alignment.Start),
+                    .align(Alignment.Companion.Start),
                 textContent = "DESCRIBE YOURSELF",
                 outlineTextFieldContent = description,
                 placeholder = "Enter a description about yourself ....",
                 enabled = !visibleIcon,
                 isSingleLine = false,
-                keyboardOptions = KeyboardOptions.Default.copy(
-                    keyboardType = KeyboardType.Text,
-                    imeAction = ImeAction.Done
+                keyboardOptions = KeyboardOptions.Companion.Default.copy(
+                    keyboardType = KeyboardType.Companion.Text,
+                    imeAction = ImeAction.Companion.Done
                 ),
                 onValueChange = {
                     description = it
@@ -245,7 +242,7 @@ fun Screen(
             )
 
             MySubmitButton(
-                modifier = Modifier
+                modifier = Modifier.Companion
                     .height(100.dp),
                 visible = !visibleIcon,
                 onClick = {
@@ -254,7 +251,7 @@ fun Screen(
             )
         }
         MyCustomDialog(
-            modifier = Modifier
+            modifier = Modifier.Companion
                 .height(250.dp),
             visible = visibleDialog,
             onDismissRequest = {
@@ -275,7 +272,7 @@ fun MyEditIcon(
     {
         Icon(
             modifier = modifier
-                .clickable (
+                .clickable(
                     onClick = onClick
                 ),
             painter = painterResource(R.drawable.icon),
@@ -295,7 +292,7 @@ fun ThemeIcon(
     {
         Icon(
             modifier = modifier
-                .clickable (
+                .clickable(
                     onClick = onClick
                 ),
             painter = painterResource(R.drawable.light_theme_icon),
@@ -307,7 +304,7 @@ fun ThemeIcon(
     {
         Icon(
             modifier = modifier
-                .clickable (
+                .clickable(
                     onClick = onClick
                 ),
             painter = painterResource(R.drawable.dark_theme_icon),
@@ -323,35 +320,31 @@ fun MyAvatar(
     enabled: Boolean = false
 ) {
     var link by remember { mutableStateOf("") }
-    val pickMedia = rememberLauncherForActivityResult(PickVisualMedia()) { uri ->
-        // Callback is invoked after the user selects a media item or closes the
-        // photo picker.
-        if (uri != null) {
-            link = uri.toString()
-        } else {
-            Log.d("Main Activity", "No media selected")
+    val pickMedia =
+        rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+            // Callback is invoked after the user selects a media item or closes the
+            // photo picker.
+            if (uri != null) {
+                link = uri.toString()
+            } else {
+                Log.d("Main Activity", "No media selected")
+            }
         }
-    }
 
     Box(
         modifier = modifier
             .padding(15.dp)
-    ){
-        if(link != ""){
+    ) {
+        if (link != "") {
             MyImageFromUri(
-                modifier = Modifier
+                modifier = Modifier.Companion
                     .size(125.dp)
-                    .padding(
-                        start = 12.dp,
-                        end = 12.dp,
-                        bottom = 12.dp),
+                    .padding(12.dp),
                 link
             )
-        }
-        else
-        {
+        } else {
             Image(
-                modifier = Modifier
+                modifier = Modifier.Companion
                     .size(125.dp)
                     .padding(bottom = 12.dp),
                 painter = painterResource(R.drawable.cat),
@@ -359,12 +352,11 @@ fun MyAvatar(
             )
         }
 
-        if(enabled)
-        {
+        if (enabled) {
             Icon(
-                modifier = Modifier
+                modifier = Modifier.Companion
                     .size(30.dp)
-                    .align(alignment = Alignment.BottomCenter)
+                    .align(alignment = Alignment.Companion.BottomCenter)
                     .background(
                         color = MaterialTheme.colorScheme.background.copy(alpha = 0.7f),
                         shape = CircleShape
@@ -373,7 +365,7 @@ fun MyAvatar(
                     .clickable(
                         onClick = {
                             // Launch the photo picker and let the user choose only images.
-                            pickMedia.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))
+                            pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                         }
                     ),
                 painter = painterResource(R.drawable.camera_icon),
@@ -398,10 +390,9 @@ fun MyImageFromUri(
             .crossfade(true)
             .build(),
         contentDescription = "Avatar",
-        contentScale = ContentScale.Crop,
+        contentScale = ContentScale.Companion.Crop,
     )
 }
-
 
 @Composable
 fun MyOutlinedTextField(
@@ -412,16 +403,16 @@ fun MyOutlinedTextField(
     enabled: Boolean = false,
     isError: Boolean = false,
     isSingleLine: Boolean = true,
-    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
-    keyboardActions: KeyboardActions = KeyboardActions.Default,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Companion.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Companion.Default,
     color: Color = MaterialTheme.colorScheme.primary,
     onValueChange: (String) -> Unit = {}
 ) {
-    Column (
+    Column(
         modifier = modifier
             .padding(4.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp)
-    ){
+    ) {
         Text(
             text = textContent,
             color = MaterialTheme.colorScheme.primary
@@ -439,16 +430,18 @@ fun MyOutlinedTextField(
             placeholder = {
                 Text(
                     text = placeholder,
-                ) },
+                )
+            },
             isError = isError,
             singleLine = isSingleLine,
             keyboardOptions = keyboardOptions,
             keyboardActions = keyboardActions,
             textStyle = TextStyle(
                 color = MaterialTheme.colorScheme.primary,
-                fontSize = 8.sp),
+                fontSize = 8.sp
+            ),
             onValueChange = onValueChange,
-            shape = RoundedCornerShape(20.dp)
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp)
         )
     }
 }
@@ -464,11 +457,11 @@ fun MySubmitButton(
         Button(
             onClick = onClick,
             modifier = modifier,
-            shape = RoundedCornerShape(16.dp),
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.surfaceTint
             )
-        ){
+        ) {
             Text(
                 text = "SUBMIT",
                 color = MaterialTheme.colorScheme.onSecondary,
@@ -496,29 +489,29 @@ fun MyCustomDialog(
             Card(
                 modifier = modifier
                     .background(
-                        color = Color.White,
-                        shape = RoundedCornerShape(16.dp)
+                        color = Color.Companion.White,
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
                     )
                     .wrapContentSize(),
-                shape = RoundedCornerShape(16.dp),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
             ) {
                 Column(
-                    modifier = Modifier
+                    modifier = Modifier.Companion
                         .fillMaxWidth()
                         .padding(8.dp)
                         .wrapContentSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
+                    horizontalAlignment = Alignment.Companion.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Image(
-                        modifier = Modifier
+                        modifier = Modifier.Companion
                             .fillMaxWidth()
                             .weight(3f),
                         painter = painterResource(R.drawable.baseline_check_circle_24),
                         contentDescription = "Checked Icon"
                     )
                     Text(
-                        modifier = Modifier
+                        modifier = Modifier.Companion
                             .padding(8.dp)
                             .wrapContentSize(),
                         text = "Success!",
@@ -526,7 +519,7 @@ fun MyCustomDialog(
                         fontSize = 35.sp,
                     )
                     Text(
-                        modifier = Modifier
+                        modifier = Modifier.Companion
                             .padding(8.dp),
                         text = "Your information has been updated!",
                     )
@@ -543,8 +536,13 @@ fun MyCustomDialog(
 fun Preview1(
 
 ){
-    Profile(
-        darkTheme = false,
-        onThemeIconClick = {  }
+    MyImageFromUri(
+        modifier = Modifier.Companion
+            .size(125.dp)
+            .padding(
+                start = 12.dp,
+                end = 12.dp,
+                bottom = 12.dp),
+        uri = "C:/Users/Admin/HaiVN/app/src/main/res/drawable/img.webp"
     )
 }

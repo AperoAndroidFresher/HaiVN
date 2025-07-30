@@ -1,11 +1,11 @@
 
 package com.example.vnhai
 
-import com.example.vnhai.view.Profile
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,16 +18,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.NavDisplay
 import com.example.vnhai.ui.theme.VNHaiTheme
 import com.example.vnhai.view.Home
-import com.example.vnhai.view.LoadingScreen
-import com.example.vnhai.view.MyPlaylist
+import com.example.vnhai.feature.signin.LoadingScreen
+import com.example.vnhai.feature.myplaylist.MyPlaylist
 import com.example.vnhai.view.Playlist
-import com.example.vnhai.view.SignInScreen
-import com.example.vnhai.view.SignUpScreen
+import com.example.vnhai.feature.profile.Profile
+import com.example.vnhai.feature.signin.SignInScreen
+import com.example.vnhai.feature.signin.SignInViewModel
+import com.example.vnhai.feature.signup.SignUpScreen
+import com.example.vnhai.feature.signup.SignUpViewModel
 import kotlinx.coroutines.delay
 
 fun String.onlyLetters() = all { it.isLetterOrDigit() }
@@ -55,9 +57,10 @@ data class User(
 
 var listUser = mutableListOf(User("hai", "hai@apero.vn"))
 
-
-
 class MainActivity : ComponentActivity() {
+    private val viewModel1: SignInViewModel by viewModels()
+    private val viewModel2: SignUpViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -68,6 +71,7 @@ class MainActivity : ComponentActivity() {
                 App(
                     modifier = Modifier
                         .fillMaxSize(),
+                    signInViewModel = viewModel1,
                     darkTheme = darkTheme,
                     onThemeIconClick = {
                         darkTheme = !darkTheme
@@ -81,6 +85,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun App(
     modifier: Modifier = Modifier,
+    signInViewModel: SignInViewModel,
     darkTheme: Boolean,
     onThemeIconClick: ()->Unit = {}
 ){
@@ -109,7 +114,7 @@ fun App(
                         when(key){
                             AppScreen.SignIn -> NavEntry(key){
                                 SignInScreen(
-                                    currentUser = listUser.last(),
+                                    viewModel = signInViewModel,
                                     onSignInButtonClick = {
                                         backStack.add(AppScreen.Home)
                                         backStack.subList(0, backStack.size - 1).clear() },

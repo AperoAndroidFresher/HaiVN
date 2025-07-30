@@ -1,4 +1,4 @@
-package com.example.vnhai.view
+package com.example.vnhai.feature.myplaylist
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -121,7 +121,7 @@ fun MyPlaylist(
     Screen(
         modifier = modifier
             .fillMaxSize()
-            .background(color = Color.Black),
+            .background(color = Color.Companion.Black),
         columnLayout = columnLayout,
         listMusic = listMusicState,
         onLayoutClick = {
@@ -150,51 +150,52 @@ fun Screen(
     if (columnLayout)
     {
         LazyColumn(
-            modifier = Modifier.background(color = Color.Black)
-        ){
+            modifier = Modifier.Companion.background(color = Color.Companion.Black)
+        ) {
             item {
                 Head(
-                    modifier = Modifier
+                    modifier = Modifier.Companion
                         .height(60.dp),
                     layoutIcon = R.drawable.grid_icon,
                     onLayoutClick = onLayoutClick,
                     onSoftClick = onSoftClick
                 )
             }
-            items(listMusic) {
-                    music -> ColumnMusicLayout(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                music = music,
-                onDeleteClick = onDeleteClick)
+            items(listMusic) { music ->
+                ColumnMusicLayout(
+                    modifier = Modifier.Companion
+                        .fillMaxWidth(),
+                    music = music,
+                    onDeleteClick = onDeleteClick
+                )
             }
         }
     }
     else
     {
         LazyVerticalGrid(
-            modifier = Modifier
-                .background(color = Color.Black)
+            modifier = Modifier.Companion
+                .background(color = Color.Companion.Black)
                 .fillMaxHeight(),
             columns = GridCells.Fixed(2),
         ) {
-            item(span = { GridItemSpan(maxLineSpan) }){
+            item(span = { GridItemSpan(maxLineSpan) }) {
                 Head(
-                    modifier = Modifier
+                    modifier = Modifier.Companion
                         .height(60.dp),
                     layoutIcon = R.drawable.column_icon,
                     onLayoutClick = onLayoutClick,
                     onSoftClick = onSoftClick
                 )
             }
-            items(listMusic) {
-                    music -> GridMusicLayout(
-                modifier = modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight()
-                ,
-                music = music,
-                onDeleteClick = onDeleteClick)
+            items(listMusic) { music ->
+                GridMusicLayout(
+                    modifier = modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight(),
+                    music = music,
+                    onDeleteClick = onDeleteClick
+                )
             }
         }
     }
@@ -214,40 +215,40 @@ fun Head(
     )
     {
         Text(
-            modifier = Modifier
-                .align(Alignment.Center),
+            modifier = Modifier.Companion
+                .align(Alignment.Companion.Center),
             text = "My Playlist",
-            fontWeight = FontWeight.Bold,
+            fontWeight = FontWeight.Companion.Bold,
             fontSize = 25.sp,
-            color = Color.White
+            color = Color.Companion.White
         )
-        Row (
+        Row(
             modifier = modifier
-                .align(Alignment.CenterEnd)
+                .align(Alignment.Companion.CenterEnd)
                 .padding(
                     end = 8.dp
                 ),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ){
+            verticalAlignment = Alignment.Companion.CenterVertically
+        ) {
             Icon(
-                modifier = Modifier
+                modifier = Modifier.Companion
                     .clickable(
                         onClick = onLayoutClick
                     )
                     .size(20.dp, 20.dp),
                 painter = painterResource(layoutIcon),
                 contentDescription = "layout icon",
-                tint = Color.White
+                tint = Color.Companion.White
             )
 
             Icon(
-                modifier = Modifier
+                modifier = Modifier.Companion
                     .clickable(onClick = onSoftClick)
                     .size(25.dp, 25.dp),
                 painter = painterResource(R.drawable.soft_icon),
                 contentDescription = "soft_icon",
-                tint = Color.White
+                tint = Color.Companion.White
             )
         }
     }
@@ -257,58 +258,59 @@ fun Head(
 @Composable
 fun ColumnMusicLayout(
     modifier: Modifier = Modifier,
-    music: Music = Music(R.drawable.music1,
+    music: Music = Music(
+        R.drawable.music1,
         "grainy days",
         "moody",
         "04:30"),
     onDeleteClick: (Music)->Unit = {}
 ){
-    Row (
+    Row(
         modifier = modifier
             .padding(8.dp),
-        verticalAlignment = Alignment.CenterVertically,
+        verticalAlignment = Alignment.Companion.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
-    ){
-        Row (
+    ) {
+        Row(
             modifier = modifier,
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.Companion.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
-        ){
+        ) {
             Row {
                 Image(
                     painter = painterResource(music.image),
                     contentDescription = "Avatar"
                 )
-                Column (
-                    modifier = Modifier
+                Column(
+                    modifier = Modifier.Companion
                         .padding(
                             start = 8.dp
                         )
-                ){
+                ) {
                     Text(
                         text = music.name,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        fontWeight = FontWeight.Companion.Bold,
+                        color = Color.Companion.White
                     )
                     Text(
                         text = music.author,
-                        color = Color.White
+                        color = Color.Companion.White
                     )
                 }
             }
-            Row (
-                modifier = Modifier
+            Row(
+                modifier = Modifier.Companion
                     .padding(
                         end = 8.dp
                     ),
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.Companion.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
-            ){
+            ) {
                 Text(
                     text = music.duration,
-                    color = Color.White
+                    color = Color.Companion.White
                 )
-                Spacer(modifier = Modifier.width(10.dp))
+                Spacer(modifier = Modifier.Companion.width(10.dp))
                 KebabMenu(
                     music = music,
                     onDeleteClick = onDeleteClick
@@ -333,38 +335,38 @@ fun GridMusicLayout(
         modifier = modifier
             .fillMaxWidth()
             .padding(8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.Companion.CenterHorizontally
     ) {
-        Box{
+        Box {
             Image(
 
-                modifier = Modifier
+                modifier = Modifier.Companion
                     .size(100.dp, 100.dp),
                 painter = painterResource(music.image),
                 contentDescription = "Avatar"
             )
             KebabMenu(
-                modifier = Modifier
-                    .align(Alignment.TopEnd),
+                modifier = Modifier.Companion
+                    .align(Alignment.Companion.TopEnd),
                 music = music,
                 onDeleteClick = onDeleteClick
             )
         }
         Text(
             text = music.name,
-            fontWeight = FontWeight.Bold,
+            fontWeight = FontWeight.Companion.Bold,
             fontSize = 16.sp,
-            color = Color.White
+            color = Color.Companion.White
         )
         Text(
             text = music.author,
             fontSize = 12.sp,
-            color = Color.Gray
+            color = Color.Companion.Gray
         )
         Text(
             text = music.duration,
             fontSize = 12.sp,
-            color = Color.White
+            color = Color.Companion.White
         )
     }
 }
@@ -379,7 +381,7 @@ fun KebabMenu(
     Box(
         modifier = modifier
             .padding(4.dp)
-    ){
+    ) {
         IconButton(
             modifier = modifier
                 .size(24.dp, 24.dp),
@@ -389,12 +391,13 @@ fun KebabMenu(
                 modifier = modifier
                     .size(20.dp, 20.dp)
                     .background(
-                        color = Color.Black.copy(alpha = 0.7f),
+                        color = Color.Companion.Black.copy(alpha = 0.7f),
                         shape = CircleShape
                     ),
                 painter = painterResource(R.drawable.kebab_menu),
                 contentDescription = "Delete Icon",
-                tint = Color.White)
+                tint = Color.Companion.White
+            )
         }
         DropdownMenu(
             expanded = expanded,
@@ -404,7 +407,8 @@ fun KebabMenu(
                 text = { Text("Delete") },
                 onClick = {
                     expanded = false
-                    onDeleteClick(music) },
+                    onDeleteClick(music)
+                },
                 leadingIcon = {
                     Icon(
                         painter = painterResource(R.drawable.baseline_delete_24),
