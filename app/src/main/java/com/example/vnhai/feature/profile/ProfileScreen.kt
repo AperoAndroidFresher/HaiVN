@@ -30,6 +30,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,36 +54,30 @@ import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.vnhai.R
+import com.example.vnhai.feature.signup.SignUpViewModel
 import com.example.vnhai.onlyLetters
 
 @Composable
 fun Profile(
     modifier: Modifier = Modifier,
     darkTheme: Boolean,
-    onThemeIconClick: () -> Unit = {})
-{
+    onThemeIconClick: () -> Unit = {},
+    viewModel: ProfileViewModel,
+) {
     Screen(darkTheme = darkTheme,
-        onThemeIconClick = onThemeIconClick
+        onThemeIconClick = onThemeIconClick,
+        viewModel = viewModel
     )
 }
 
 @Composable
 fun Screen(
     darkTheme: Boolean,
-    onThemeIconClick: () -> Unit
-)
-{
-    var name by remember { mutableStateOf("") }
-    var phone by remember { mutableStateOf("") }
-    var universityName by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-
-    var visibleIcon by remember { mutableStateOf(true) }
-    var visibleDialog by remember { mutableStateOf(false) }
-    var hasNameError by remember { mutableStateOf(false) }
-    var hasUniversityNameError by remember { mutableStateOf(false) }
-
+    onThemeIconClick: () -> Unit,
+    viewModel: ProfileViewModel,
+) {
     val focusManager = LocalFocusManager.current
+    val state = viewModel.uiState.collectAsState()
 
     Box(
         modifier = Modifier.Companion
@@ -131,16 +126,16 @@ fun Screen(
                     modifier = Modifier.Companion
                         .size(35.dp)
                         .align(Alignment.Companion.CenterEnd),
-                    visible = visibleIcon,
+                    visible = state.value.visibleIcon,
                     onClick = {
-                        visibleIcon = false
+                        viewModel.processIntent(ProfileIntent.ChangeVisibleIcon)
                     }
                 )
             }
 
             MyAvatar(
                 modifier = Modifier.Companion.size(150.dp),
-                enabled = !visibleIcon
+                enabled = !state.value.visibleIcon
             )
 
             Row(
@@ -154,24 +149,24 @@ fun Screen(
                 MyOutlinedTextField(
                     modifier = modifier,
                     textContent = "NAME",
-                    outlineTextFieldContent = name,
+                    outlineTextFieldContent = state.value.name,
                     placeholder = "Enter your name",
-                    enabled = !visibleIcon,
-                    isError = hasNameError,
+                    enabled = !state.value.visibleIcon,
+                    isError = state.value.hasNameError,
                     keyboardOptions = KeyboardOptions.Companion.Default.copy(
                         keyboardType = KeyboardType.Companion.Text,
                         imeAction = ImeAction.Companion.Done
                     ),
                     keyboardActions = KeyboardActions(
                         onDone = {
-                            hasNameError = !name.onlyLetters()
-                            if (!hasNameError) {
+                            viewModel.processIntent(ProfileIntent.HasNameError(!state.value.name.onlyLetters()))
+                            if (!state.value.hasNameError) {
                                 focusManager.clearFocus()
                             }
                         }
                     ),
                     onValueChange = {
-                        name = it
+                        viewModel.processIntent(ProfileIntent.EnterName(it))
                     }
                 )
 
@@ -180,9 +175,9 @@ fun Screen(
                 MyOutlinedTextField(
                     modifier = modifier,
                     textContent = "PHONE",
-                    outlineTextFieldContent = phone,
+                    outlineTextFieldContent = state.value.phone,
                     placeholder = "Enter your phone",
-                    enabled = !visibleIcon,
+                    enabled = !state.value.visibleIcon,
                     keyboardOptions = KeyboardOptions.Companion.Default.copy(
                         keyboardType = KeyboardType.Companion.Number,
                         imeAction = ImeAction.Companion.Done
@@ -193,7 +188,7 @@ fun Screen(
                         },
                     ),
                     onValueChange = {
-                        phone = it
+                        viewModel.processIntent(ProfileIntent.EnterPhone(it))
                     }
                 )
             }
@@ -202,24 +197,24 @@ fun Screen(
                 modifier = Modifier.Companion
                     .height(90.dp),
                 textContent = "University Name",
-                outlineTextFieldContent = universityName,
+                outlineTextFieldContent = state.value.universityName,
                 placeholder = "Enter your university name ....",
-                enabled = !visibleIcon,
-                isError = hasUniversityNameError,
+                enabled = !state.value.visibleIcon,
+                isError = state.value.hasUniversityNameError,
                 keyboardOptions = KeyboardOptions.Companion.Default.copy(
                     keyboardType = KeyboardType.Companion.Text,
                     imeAction = ImeAction.Companion.Done
                 ),
                 keyboardActions = KeyboardActions(
                     onDone = {
-                        hasUniversityNameError = !universityName.onlyLetters()
-                        if (hasUniversityNameError) {
+                        viewModel.processIntent(ProfileIntent.HasUniversityNameError(!state.value.universityName.onlyLetters()))
+                        if (!state.value.hasUniversityNameError) {
                             focusManager.clearFocus()
                         }
                     }
                 ),
                 onValueChange = {
-                    universityName = it
+                    viewModel.processIntent(ProfileIntent.EnterUniversity(it))
                 }
             )
 
@@ -228,35 +223,35 @@ fun Screen(
                     .height(150.dp)
                     .align(Alignment.Companion.Start),
                 textContent = "DESCRIBE YOURSELF",
-                outlineTextFieldContent = description,
+                outlineTextFieldContent = state.value.description,
                 placeholder = "Enter a description about yourself ....",
-                enabled = !visibleIcon,
+                enabled = !state.value.visibleIcon,
                 isSingleLine = false,
                 keyboardOptions = KeyboardOptions.Companion.Default.copy(
                     keyboardType = KeyboardType.Companion.Text,
                     imeAction = ImeAction.Companion.Done
                 ),
                 onValueChange = {
-                    description = it
+                    viewModel.processIntent(ProfileIntent.EnterDescription(it))
                 }
             )
 
             MySubmitButton(
                 modifier = Modifier.Companion
                     .height(100.dp),
-                visible = !visibleIcon,
+                visible = !state.value.visibleIcon,
                 onClick = {
-                    visibleDialog = !(hasNameError && hasUniversityNameError)
+                    viewModel.processIntent(ProfileIntent.ChangeVisibleDialog(!(state.value.hasNameError && state.value.hasUniversityNameError)))
                 }
             )
         }
         MyCustomDialog(
             modifier = Modifier.Companion
                 .height(250.dp),
-            visible = visibleDialog,
+            visible = state.value.visibleDialog,
             onDismissRequest = {
-                visibleDialog = false
-                visibleIcon = true
+                viewModel.processIntent(ProfileIntent.ChangeVisibleDialog(false))
+                viewModel.processIntent(ProfileIntent.ChangeVisibleIcon)
             }
         )
     }

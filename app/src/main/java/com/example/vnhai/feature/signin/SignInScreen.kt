@@ -21,6 +21,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,6 +36,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.vnhai.R
+import com.example.vnhai.listUser
 
 @Composable
 fun LoadingScreen(
@@ -78,11 +80,10 @@ fun SignInScreen(
     viewModel: SignInViewModel,
 )
 {
-
-//    var username by remember { mutableStateOf(currentUser.username) }
-//    var password by remember { mutableStateOf(currentUser.password) }
-//    var checked by remember { mutableStateOf(false) }
-//    var passwordVisible by remember { mutableStateOf(false) }
+    LaunchedEffect(listUser) {
+        viewModel.processIntent(SignInIntent.EnterUserName(listUser.last().username))
+        viewModel.processIntent(SignInIntent.EnterPassword(listUser.last().password))
+    }
 
     val state = viewModel.uiState.collectAsState()
 

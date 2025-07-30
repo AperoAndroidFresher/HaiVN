@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,20 +36,11 @@ import com.example.vnhai.onlyLetters
 fun SignUpScreen(
     modifier: Modifier = Modifier,
     saveCurrentUser: (User)->Unit = {},
-    onSignUpClick: () -> Unit = {}
+    onSignUpClick: () -> Unit = {},
+    viewModel: SignUpViewModel
 ) {
-    var username by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var confirm by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
 
-    var userError by remember { mutableStateOf(false) }
-    var passwordError by remember { mutableStateOf(false) }
-    var confirmError by remember { mutableStateOf(false) }
-    var emailError by remember { mutableStateOf(false) }
-
-    var passwordVisible by remember { mutableStateOf(false) }
-    var confirmVisible by remember { mutableStateOf(false) }
+    val state = viewModel.uiState.collectAsState()
 
     Column(
         modifier = modifier
@@ -80,13 +72,16 @@ fun SignUpScreen(
                 .fillMaxWidth()
                 .padding(top = 24.dp),
             leadingIcon = R.drawable.user_icon,
-            isError = userError,
-            value = username,
+            isError = state.value.userError,
+            value = state.value.username,
             placeholder = "Username",
             onValueChange = {
-                username = it
+                viewModel.processIntent(SignUpIntent.EnterUserName(it))
             },
-            onFocused = { string, bool -> username = string; userError = bool }
+            onFocused = { string, bool ->
+                viewModel.processIntent(SignUpIntent.EnterUserName(string))
+                viewModel.processIntent(SignUpIntent.ChangeUserError(bool))
+            }
         )
 
         MyOutLineTextField(
@@ -94,18 +89,21 @@ fun SignUpScreen(
                 .fillMaxWidth()
                 .padding(top = 24.dp),
             leadingIcon = R.drawable.password_icon,
-            isError = passwordError,
-            password = passwordVisible,
-            value = password,
+            isError = state.value.passwordError,
+            password = state.value.passwordVisible,
+            value = state.value.password,
             containTrailing = true,
             placeholder = "Password",
             onValueChange = {
-                password = it
+                viewModel.processIntent(SignUpIntent.EnterPassword(it))
             },
             onTrailingIconClick = {
-                passwordVisible = !passwordVisible
+                viewModel.processIntent(SignUpIntent.VisiblePassword)
             },
-            onFocused = { string, bool -> password = string; passwordError = bool }
+            onFocused = { string, bool ->
+                viewModel.processIntent(SignUpIntent.EnterPassword(string))
+                viewModel.processIntent(SignUpIntent.ChangePasswordError(bool))
+            }
         )
 
         MyOutLineTextField(
@@ -113,18 +111,21 @@ fun SignUpScreen(
                 .fillMaxWidth()
                 .padding(top = 24.dp),
             leadingIcon = R.drawable.password_icon,
-            isError = confirmError,
-            value = confirm,
+            isError = state.value.confirmError,
+            value = state.value.confirm,
             containTrailing = true,
-            password = confirmVisible,
+            password = state.value.confirmVisible,
             placeholder = "Confirm password",
             onValueChange = {
-                confirm = it
+                viewModel.processIntent(SignUpIntent.EnterConfirm(it))
             },
             onTrailingIconClick = {
-                confirmVisible = !confirmVisible
+                viewModel.processIntent(SignUpIntent.VisibleConfirm)
             },
-            onFocused = { string, bool -> confirm = string; confirmError = bool }
+            onFocused = { string, bool ->
+                viewModel.processIntent(SignUpIntent.EnterConfirm(string))
+                viewModel.processIntent(SignUpIntent.ChangeConfirmError(bool))
+            }
         )
 
         MyOutLineTextField(
@@ -132,13 +133,16 @@ fun SignUpScreen(
                 .fillMaxWidth()
                 .padding(top = 24.dp),
             leadingIcon = R.drawable.email_icon,
-            isError = emailError,
-            value = email,
+            isError = state.value.emailError,
+            value = state.value.email,
             placeholder = "Email",
             onValueChange = {
-                email = it
+                viewModel.processIntent(SignUpIntent.EnterEmail(it))
             },
-            onFocused = { string, bool -> email = string; emailError = bool }
+            onFocused = { string, bool ->
+                viewModel.processIntent(SignUpIntent.EnterEmail(string))
+                viewModel.processIntent(SignUpIntent.ChangeEmailError(bool))
+            }
         )
 
         Row(
@@ -155,25 +159,11 @@ fun SignUpScreen(
                     .padding(top = 20.dp),
                 text = "Sign Up",
                 onClick = {
-                    if (!username.onlyLetters()) {
-                        userError = true
-                    }
-                    if (!password.onlyLetters()) {
-                        passwordError = true
-                    }
-                    if (!confirm.onlyLetters() || confirm != password) {
-                        confirmError = true
-                    }
-                    if (!email.isValidateEmail()) {
-                        emailError = true
-                    }
-                    if (!userError && !passwordError && !confirmError && !emailError) {
-                        if (checkUserName(username)) {
-                            onSignUpClick()
-                            saveCurrentUser(User(username, password))
-                        } else {
-                            userError = true
-                        }
+                    viewModel.processIntent(SignUpIntent.SignUp)
+                    if(state.value.userError && state.value.passwordError && state.value.confirmError && state.value.emailError)
+                    {
+                        saveCurrentUser(User(state.value.username, state.value.password))
+                        onSignUpClick()
                     }
                 })
         }

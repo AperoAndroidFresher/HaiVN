@@ -3,7 +3,6 @@ package com.example.vnhai.feature.signin
 import com.example.vnhai.User
 
 data class SignInState(
-    val currentUser: User = User("", ""),
     val username: String = "",
     val password: String = "",
     val checked: Boolean = false,

@@ -26,6 +26,8 @@ import com.example.vnhai.feature.signin.LoadingScreen
 import com.example.vnhai.feature.myplaylist.MyPlaylist
 import com.example.vnhai.view.Playlist
 import com.example.vnhai.feature.profile.Profile
+import com.example.vnhai.feature.profile.ProfileIntent
+import com.example.vnhai.feature.profile.ProfileViewModel
 import com.example.vnhai.feature.signin.SignInScreen
 import com.example.vnhai.feature.signin.SignInViewModel
 import com.example.vnhai.feature.signup.SignUpScreen
@@ -58,8 +60,9 @@ data class User(
 var listUser = mutableListOf(User("hai", "hai@apero.vn"))
 
 class MainActivity : ComponentActivity() {
-    private val viewModel1: SignInViewModel by viewModels()
-    private val viewModel2: SignUpViewModel by viewModels()
+    private val signInViewModel: SignInViewModel by viewModels()
+    private val signUpViewModel: SignUpViewModel by viewModels()
+    private val profileViewModel: ProfileViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -71,7 +74,9 @@ class MainActivity : ComponentActivity() {
                 App(
                     modifier = Modifier
                         .fillMaxSize(),
-                    signInViewModel = viewModel1,
+                    signInViewModel = signInViewModel,
+                    signUpViewModel = signUpViewModel,
+                    profileViewModel = profileViewModel,
                     darkTheme = darkTheme,
                     onThemeIconClick = {
                         darkTheme = !darkTheme
@@ -86,6 +91,8 @@ class MainActivity : ComponentActivity() {
 fun App(
     modifier: Modifier = Modifier,
     signInViewModel: SignInViewModel,
+    signUpViewModel: SignUpViewModel,
+    profileViewModel: ProfileViewModel,
     darkTheme: Boolean,
     onThemeIconClick: ()->Unit = {}
 ){
@@ -126,8 +133,12 @@ fun App(
 
                             AppScreen.SignUp -> NavEntry(key){
                                 SignUpScreen(
+                                    viewModel = signUpViewModel,
                                     saveCurrentUser = { user ->
-                                        listUser.add(user)
+                                        if(checkUserName(user.username))
+                                        {
+                                            listUser.add(user)
+                                        }
                                     },
                                     onSignUpClick = {backStack.add(AppScreen.SignIn)},
                                 )
@@ -145,7 +156,8 @@ fun App(
                             AppScreen.Profile -> NavEntry(key) {
                                 Profile(
                                     darkTheme = darkTheme,
-                                    onThemeIconClick = onThemeIconClick
+                                    onThemeIconClick = onThemeIconClick,
+                                    viewModel = profileViewModel
                                 )
                             }
 

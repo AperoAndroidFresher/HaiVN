@@ -1,24 +1,38 @@
 package com.example.vnhai.feature.signup
 
-import com.example.vnhai.User
-
 data class SignUpState(
-    val currentUser: User = User("", ""),
     val username: String = "",
     val password: String = "",
-    val checked: Boolean = false,
-    val passwordVisible: Boolean = false
+    val confirm: String = "",
+    val email: String = "",
+
+    val userError: Boolean = false,
+    val passwordError: Boolean = false,
+    val confirmError: Boolean = false,
+    val emailError: Boolean = false,
+
+    val passwordVisible: Boolean = false,
+    val confirmVisible: Boolean = false
 )
 
 sealed interface SignUpIntent{
     data class EnterUserName(val username: String): SignUpIntent
     data class EnterPassword(val password: String): SignUpIntent
-    object CheckRemember: SignUpIntent
-    object SignIn: SignUpIntent
+    data class EnterConfirm(val confirm: String): SignUpIntent
+    data class EnterEmail(val email: String): SignUpIntent
+
+    data class ChangeUserError(val userError: Boolean): SignUpIntent
+    data class ChangePasswordError(val passwordError: Boolean): SignUpIntent
+    data class ChangeConfirmError(val confirmError: Boolean): SignUpIntent
+    data class ChangeEmailError(val emailError: Boolean): SignUpIntent
+
+
+    object VisiblePassword: SignUpIntent
+    object VisibleConfirm: SignUpIntent
+
     object SignUp: SignUpIntent
 }
 
 sealed interface SignUpEvent{
-    object SignIn: SignUpEvent
-    object SignUp: SignUpEvent
+
 }
