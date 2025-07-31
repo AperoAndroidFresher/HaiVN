@@ -1,5 +1,10 @@
 package com.example.vnhai.feature.myplaylist
 
+import android.content.ContentResolver
+import android.graphics.BitmapFactory
+import android.media.MediaMetadataRetriever
+import android.net.Uri
+import android.provider.MediaStore
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -35,6 +40,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -42,82 +49,84 @@ import androidx.compose.ui.unit.sp
 import com.example.vnhai.R
 
 data class Music(
-    val image: Int,
+    val link: String,
     val name: String,
     val author: String,
     val duration: String,
 )
 
-val listMusic = listOf<Music>(
-    Music(
-        R.drawable.music1,
-        "grainy days",
-        "moody",
-        "04:30"
-    ),
-    Music(
-        R.drawable.music2,
-        "Coffee",
-        "Kainbeats",
-        "04:30"
-    ),
-    Music(
-        R.drawable.music3,
-        "raindrops",
-        "rainyyxx",
-        "00:30"
-    ),
-    Music(
-        R.drawable.music4,
-        "Tokyo",
-        "SmYang",
-        "04:02"
-    ),
-    Music(
-        R.drawable.music5,
-        "Coffee",
-        "iamfinenow",
-        "04:02"
-    ),
-    Music(
-        R.drawable.music1,
-        "grainy days 2",
-        "moody",
-        "04:30"
-    ),
-    Music(
-        R.drawable.music2,
-        "Coffee 2",
-        "Kainbeats",
-        "04:30"
-    ),
-    Music(
-        R.drawable.music3,
-        "raindrops 2",
-        "rainyyxx",
-        "00:30"
-    ),
-    Music(
-        R.drawable.music4,
-        "Tokyo 2",
-        "SmYang",
-        "04:02"
-    ),
-    Music(
-        R.drawable.music5,
-        "Coffee 2",
-        "iamfinenow",
-        "04:02"
-    )
-)
+//val listMusic = listOf<Music>(
+//    Music(
+//        R.drawable.music1,
+//        "grainy days",
+//        "moody",
+//        "04:30"
+//    ),
+//    Music(
+//        R.drawable.music2,
+//        "Coffee",
+//        "Kainbeats",
+//        "04:30"
+//    ),
+//    Music(
+//        R.drawable.music3,
+//        "raindrops",
+//        "rainyyxx",
+//        "00:30"
+//    ),
+//    Music(
+//        R.drawable.music4,
+//        "Tokyo",
+//        "SmYang",
+//        "04:02"
+//    ),
+//    Music(
+//        R.drawable.music5,
+//        "Coffee",
+//        "iamfinenow",
+//        "04:02"
+//    ),
+//    Music(
+//        R.drawable.music1,
+//        "grainy days 2",
+//        "moody",
+//        "04:30"
+//    ),
+//    Music(
+//        R.drawable.music2,
+//        "Coffee 2",
+//        "Kainbeats",
+//        "04:30"
+//    ),
+//    Music(
+//        R.drawable.music3,
+//        "raindrops 2",
+//        "rainyyxx",
+//        "00:30"
+//    ),
+//    Music(
+//        R.drawable.music4,
+//        "Tokyo 2",
+//        "SmYang",
+//        "04:02"
+//    ),
+//    Music(
+//        R.drawable.music5,
+//        "Coffee 2",
+//        "iamfinenow",
+//        "04:02"
+//    )
+//)
 
 @Composable
 fun MyPlaylist(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    listMusic: List<Music>,
 ) {
     var columnLayout by remember { mutableStateOf(false) }
     var listMusicState by remember { mutableStateOf(listMusic) }
     var mutableListMusic = listMusicState.toMutableList()
+
     Screen(
         modifier = modifier
             .fillMaxSize()
@@ -259,7 +268,7 @@ fun Head(
 fun ColumnMusicLayout(
     modifier: Modifier = Modifier,
     music: Music = Music(
-        R.drawable.music1,
+        "C:/Users/Admin/HaiVN/app/src/main/res/drawable/music1.webp",
         "grainy days",
         "moody",
         "04:30"),
@@ -277,10 +286,7 @@ fun ColumnMusicLayout(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Row {
-                Image(
-                    painter = painterResource(music.image),
-                    contentDescription = "Avatar"
-                )
+                DrawImageFromPath(mp3FilePath = music.link)
                 Column(
                     modifier = Modifier.Companion
                         .padding(
@@ -324,7 +330,7 @@ fun ColumnMusicLayout(
 fun GridMusicLayout(
     modifier: Modifier = Modifier,
     music: Music = Music(
-        R.drawable.music1,
+        "C:/Users/Admin/HaiVN/app/src/main/res/drawable/music1.webp",
         "grainy days",
         "moody",
         "04:30"
@@ -338,13 +344,10 @@ fun GridMusicLayout(
         horizontalAlignment = Alignment.Companion.CenterHorizontally
     ) {
         Box {
-            Image(
+            DrawImageFromPath(modifier = Modifier
+                .size(100.dp, 100.dp),
+                mp3FilePath = music.link)
 
-                modifier = Modifier.Companion
-                    .size(100.dp, 100.dp),
-                painter = painterResource(music.image),
-                contentDescription = "Avatar"
-            )
             KebabMenu(
                 modifier = Modifier.Companion
                     .align(Alignment.Companion.TopEnd),
@@ -417,5 +420,31 @@ fun KebabMenu(
                 }
             )
         }
+    }
+}
+
+@Composable
+fun DrawImageFromPath(modifier: Modifier = Modifier, mp3FilePath: String) {
+    var albumArtBitmap by remember { mutableStateOf<android.graphics.Bitmap?>(null) }
+
+    val retriever = MediaMetadataRetriever()
+    try {
+        retriever.setDataSource(mp3FilePath)
+        val art = retriever.embeddedPicture
+        if (art != null) {
+            albumArtBitmap = BitmapFactory.decodeByteArray(art, 0, art.size)
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+    } finally {
+        retriever.release()
+    }
+
+    albumArtBitmap?.let {
+        Image(
+            bitmap = it.asImageBitmap(),
+            contentDescription = "Album Art",
+            modifier = modifier
+        )
     }
 }
