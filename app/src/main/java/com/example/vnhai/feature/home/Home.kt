@@ -1,4 +1,4 @@
-package com.example.vnhai.view
+package com.example.vnhai.feature.home
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
@@ -109,7 +109,7 @@ fun BottomHomeBar(
             border = BorderStroke(2.dp, Color.Black),
             onClick = onPlaylistButtonClick
         ) {
-            Text("Playlist")
+            Text("Library")
         }
         Button(
             modifier = modifier

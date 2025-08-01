@@ -1,10 +1,7 @@
 package com.example.vnhai.feature.myplaylist
 
-import android.content.ContentResolver
 import android.graphics.BitmapFactory
 import android.media.MediaMetadataRetriever
-import android.net.Uri
-import android.provider.MediaStore
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -24,8 +21,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -41,87 +36,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.vnhai.Music
 import com.example.vnhai.R
-
-data class Music(
-    val link: String,
-    val name: String,
-    val author: String,
-    val duration: String,
-)
-
-//val listMusic = listOf<Music>(
-//    Music(
-//        R.drawable.music1,
-//        "grainy days",
-//        "moody",
-//        "04:30"
-//    ),
-//    Music(
-//        R.drawable.music2,
-//        "Coffee",
-//        "Kainbeats",
-//        "04:30"
-//    ),
-//    Music(
-//        R.drawable.music3,
-//        "raindrops",
-//        "rainyyxx",
-//        "00:30"
-//    ),
-//    Music(
-//        R.drawable.music4,
-//        "Tokyo",
-//        "SmYang",
-//        "04:02"
-//    ),
-//    Music(
-//        R.drawable.music5,
-//        "Coffee",
-//        "iamfinenow",
-//        "04:02"
-//    ),
-//    Music(
-//        R.drawable.music1,
-//        "grainy days 2",
-//        "moody",
-//        "04:30"
-//    ),
-//    Music(
-//        R.drawable.music2,
-//        "Coffee 2",
-//        "Kainbeats",
-//        "04:30"
-//    ),
-//    Music(
-//        R.drawable.music3,
-//        "raindrops 2",
-//        "rainyyxx",
-//        "00:30"
-//    ),
-//    Music(
-//        R.drawable.music4,
-//        "Tokyo 2",
-//        "SmYang",
-//        "04:02"
-//    ),
-//    Music(
-//        R.drawable.music5,
-//        "Coffee 2",
-//        "iamfinenow",
-//        "04:02"
-//    )
-//)
 
 @Composable
 fun MyPlaylist(
     modifier: Modifier = Modifier,
-    listMusic: List<Music>,
+    listMusic: List<Music> = listOf<Music>()
 ) {
     var columnLayout by remember { mutableStateOf(false) }
     var listMusicState by remember { mutableStateOf(listMusic) }
@@ -170,14 +95,6 @@ fun Screen(
                     onSoftClick = onSoftClick
                 )
             }
-            items(listMusic) { music ->
-                ColumnMusicLayout(
-                    modifier = Modifier.Companion
-                        .fillMaxWidth(),
-                    music = music,
-                    onDeleteClick = onDeleteClick
-                )
-            }
         }
     }
     else
@@ -195,15 +112,6 @@ fun Screen(
                     layoutIcon = R.drawable.column_icon,
                     onLayoutClick = onLayoutClick,
                     onSoftClick = onSoftClick
-                )
-            }
-            items(listMusic) { music ->
-                GridMusicLayout(
-                    modifier = modifier
-                        .fillMaxWidth()
-                        .fillMaxHeight(),
-                    music = music,
-                    onDeleteClick = onDeleteClick
                 )
             }
         }
@@ -267,7 +175,7 @@ fun Head(
 @Composable
 fun ColumnMusicLayout(
     modifier: Modifier = Modifier,
-    music: Music = Music(
+    music:Music = Music(
         "C:/Users/Admin/HaiVN/app/src/main/res/drawable/music1.webp",
         "grainy days",
         "moody",

@@ -1,11 +1,6 @@
-
 package com.example.vnhai
 
-import android.content.ContentResolver
-import android.net.Uri
 import android.os.Bundle
-import android.provider.MediaStore
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -24,28 +19,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.NavDisplay
-import com.example.vnhai.feature.myplaylist.Music
-import com.example.vnhai.ui.theme.VNHaiTheme
-import com.example.vnhai.view.Home
-import com.example.vnhai.feature.signin.LoadingScreen
+import com.example.vnhai.feature.home.Home
+import com.example.vnhai.feature.library.LibraryScreen
+import com.example.vnhai.feature.library.LibraryViewModel
 import com.example.vnhai.feature.myplaylist.MyPlaylist
-import com.example.vnhai.view.Playlist
 import com.example.vnhai.feature.profile.Profile
 import com.example.vnhai.feature.profile.ProfileViewModel
+import com.example.vnhai.feature.signin.LoadingScreen
 import com.example.vnhai.feature.signin.SignInScreen
 import com.example.vnhai.feature.signin.SignInViewModel
 import com.example.vnhai.feature.signup.SignUpScreen
 import com.example.vnhai.feature.signup.SignUpViewModel
+import com.example.vnhai.ui.theme.VNHaiTheme
 import kotlinx.coroutines.delay
-
-fun String.onlyLetters() = all { it.isLetterOrDigit() }
-fun String.isValidateEmail() = endsWith("@apero.vn") &&
-        subSequence(0,lastIndexOf("@apero.vn")).all { it.isLowerCase() || it=='_' || it.isDigit() }
-
-fun checkUserName(name: String): Boolean
-{
-    return listUser.all { user -> user.username != name.lowercase() }
-}
 
 sealed interface AppScreen{
     data object SignIn : AppScreen
@@ -56,50 +42,12 @@ sealed interface AppScreen{
     data object MyPlaylist: AppScreen
 }
 
-data class User(
-    val username: String,
-    val password: String
-)
-
-var listUser = mutableListOf(User("hai", "hai@apero.vn"))
 
 class MainActivity : ComponentActivity() {
     private val signInViewModel: SignInViewModel by viewModels()
     private val signUpViewModel: SignUpViewModel by viewModels()
     private val profileViewModel: ProfileViewModel by viewModels()
-
-    private fun getAllMp3Files(): List<Music>{
-        val mutableListMusic = mutableListOf<Music>()
-        val contentResolver: ContentResolver = contentResolver
-        val uri: Uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
-        val selection = "${MediaStore.Audio.Media.DURATION} > 0"
-        val projection = arrayOf(
-            MediaStore.Audio.Media._ID,
-            MediaStore.Audio.Media.TITLE,
-            MediaStore.Audio.Media.ARTIST,
-            MediaStore.Audio.Media.DURATION,
-            MediaStore.Audio.Media.DATA
-        )
-        val cursor = contentResolver.query(uri, projection, selection, null, null)
-        cursor?.use{
-            val idColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
-            val titleColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE)
-            val artistColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)
-            val duration = it.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
-            val dataColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA)
-
-            while(it.moveToNext()){
-                val id = it.getLong(idColumn)
-                val title = it.getString(titleColumn)
-                val artist = it.getString(artistColumn)
-                val duration = it.getString(duration)
-                val data = it.getString(dataColumn)
-
-                mutableListMusic.add(Music(data, title, artist, duration))
-            }
-        }
-        return mutableListMusic
-    }
+    private val libraryViewModel: LibraryViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -107,8 +55,6 @@ class MainActivity : ComponentActivity() {
         setContent {
             var currentNighMode = isSystemInDarkTheme()
             var darkTheme by remember { mutableStateOf(currentNighMode) }
-            val listMusic = getAllMp3Files()
-            Log.d("MainActivity", "${listMusic.size}")
 
             VNHaiTheme (darkTheme = darkTheme) {
                 App(
@@ -117,7 +63,8 @@ class MainActivity : ComponentActivity() {
                     signInViewModel = signInViewModel,
                     signUpViewModel = signUpViewModel,
                     profileViewModel = profileViewModel,
-                    listMusic = listMusic,
+                    libraryViewModel = libraryViewModel,
+
                     darkTheme = darkTheme,
                     onThemeIconClick = {
                         darkTheme = !darkTheme
@@ -134,7 +81,7 @@ fun App(
     signInViewModel: SignInViewModel,
     signUpViewModel: SignUpViewModel,
     profileViewModel: ProfileViewModel,
-    listMusic: List<Music>,
+    libraryViewModel: LibraryViewModel,
     darkTheme: Boolean,
     onThemeIconClick: ()->Unit = {}
 ){
@@ -204,11 +151,11 @@ fun App(
                             }
 
                             AppScreen.MyPlaylist -> NavEntry(key){
-                                MyPlaylist(listMusic = listMusic)
+                                MyPlaylist()
                             }
 
                             AppScreen.Playlist -> NavEntry(key){
-                                Playlist()
+                                LibraryScreen(viewModel = libraryViewModel)
                             }
                         }
                     }
