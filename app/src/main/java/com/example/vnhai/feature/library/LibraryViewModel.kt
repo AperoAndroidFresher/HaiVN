@@ -4,6 +4,7 @@ import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
 import android.provider.MediaStore
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.example.vnhai.Music
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -15,26 +16,26 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
 class LibraryViewModel(): ViewModel() {
-    private val _uiState = MutableStateFlow<LibraryState>(LibraryState())
+    private val _uiState = MutableStateFlow(LibraryState())
     val uiState: StateFlow<LibraryState> = _uiState.asStateFlow()
 
     private val _event = MutableSharedFlow<LibraryEvent>()
     val event: SharedFlow<LibraryEvent> = _event.asSharedFlow()
 
-    fun processIntent(intent: LibraryIntent, context: Context){
+    fun processIntent(intent: LibraryIntent){
         when(intent)
         {
-            LibraryIntent.ChangeDirection -> {
+            is LibraryIntent.ChangeDirection -> {
                 _uiState.update { currentState ->
-                    currentState.copy(isLocal = !uiState.value.isLocal)
+                    currentState.copy(isLocal = intent.isLocal)
                 }
             }
 
-            LibraryIntent.LoadData -> {
-                var listMusic = mutableListOf<Music>()
+            is LibraryIntent.LoadData -> {
+                val listMusic = mutableListOf<Music>()
                 if(uiState.value.isLocal)
                 {
-                    val contentResolver: ContentResolver = context.contentResolver
+                    val contentResolver: ContentResolver = intent.context.contentResolver
                     val uri: Uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
                     val selection = "${MediaStore.Audio.Media.DURATION} > 0"
                     val projection = arrayOf(
@@ -67,6 +68,7 @@ class LibraryViewModel(): ViewModel() {
                 _uiState.update { currentState ->
                     currentState.copy(listMusic = listMusic)
                 }
+                println(_uiState.value.listMusic.size)
             }
 
             is LibraryIntent.AddToPlaylist -> TODO()

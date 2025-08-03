@@ -8,3 +8,7 @@ fun checkUserName(name: String): Boolean
 {
     return listUser.all { user -> user.username != name.lowercase() }
 }
+
+fun convertFromMilliSecondToMinuteAndSecond(){
+
+}

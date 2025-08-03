@@ -14,9 +14,8 @@ data class Music(
 
 data class Playlist(
     var name: String,
-    var image: String,
+    var image: Int,
     val listMusic: MutableList<Music>
 )
 
-var myPlaylistMusic = mutableListOf<Playlist>()
 var listUser = mutableListOf(User("hai", "hai@apero.vn"))

@@ -1,7 +1,5 @@
-package com.example.vnhai.feature.myplaylist
+package com.example.vnhai.view
 
-import android.graphics.BitmapFactory
-import android.media.MediaMetadataRetriever
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,6 +19,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -35,27 +35,93 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.vnhai.Music
 import com.example.vnhai.R
+
+data class Music(
+    val image: Int,
+    val name: String,
+    val author: String,
+    val duration: String,
+)
+
+val listMusic = listOf<Music>(
+    Music(
+        R.drawable.music1,
+        "grainy days",
+        "moody",
+        "04:30"
+    ),
+    Music(
+        R.drawable.music2,
+        "Coffee",
+        "Kainbeats",
+        "04:30"
+    ),
+    Music(
+        R.drawable.music3,
+        "raindrops",
+        "rainyyxx",
+        "00:30"
+    ),
+    Music(
+        R.drawable.music4,
+        "Tokyo",
+        "SmYang",
+        "04:02"
+    ),
+    Music(
+        R.drawable.music5,
+        "Coffee",
+        "iamfinenow",
+        "04:02"
+    ),
+    Music(
+        R.drawable.music1,
+        "grainy days 2",
+        "moody",
+        "04:30"
+    ),
+    Music(
+        R.drawable.music2,
+        "Coffee 2",
+        "Kainbeats",
+        "04:30"
+    ),
+    Music(
+        R.drawable.music3,
+        "raindrops 2",
+        "rainyyxx",
+        "00:30"
+    ),
+    Music(
+        R.drawable.music4,
+        "Tokyo 2",
+        "SmYang",
+        "04:02"
+    ),
+    Music(
+        R.drawable.music5,
+        "Coffee 2",
+        "iamfinenow",
+        "04:02"
+    )
+)
 
 @Composable
 fun MyPlaylist(
-    modifier: Modifier = Modifier,
-    listMusic: List<Music> = listOf<Music>()
+    modifier: Modifier = Modifier
 ) {
     var columnLayout by remember { mutableStateOf(false) }
     var listMusicState by remember { mutableStateOf(listMusic) }
     var mutableListMusic = listMusicState.toMutableList()
-
     Screen(
         modifier = modifier
             .fillMaxSize()
-            .background(color = Color.Companion.Black),
+            .background(color = Color.Black),
         columnLayout = columnLayout,
         listMusic = listMusicState,
         onLayoutClick = {
@@ -84,35 +150,51 @@ fun Screen(
     if (columnLayout)
     {
         LazyColumn(
-            modifier = Modifier.Companion.background(color = Color.Companion.Black)
-        ) {
+            modifier = Modifier.background(color = Color.Black)
+        ){
             item {
                 Head(
-                    modifier = Modifier.Companion
+                    modifier = Modifier
                         .height(60.dp),
                     layoutIcon = R.drawable.grid_icon,
                     onLayoutClick = onLayoutClick,
                     onSoftClick = onSoftClick
                 )
             }
+            items(listMusic) {
+                    music -> ColumnMusicLayout(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                music = music,
+                onDeleteClick = onDeleteClick)
+            }
         }
     }
     else
     {
         LazyVerticalGrid(
-            modifier = Modifier.Companion
-                .background(color = Color.Companion.Black)
+            modifier = Modifier
+                .background(color = Color.Black)
                 .fillMaxHeight(),
             columns = GridCells.Fixed(2),
         ) {
-            item(span = { GridItemSpan(maxLineSpan) }) {
+            item(span = { GridItemSpan(maxLineSpan) }){
                 Head(
-                    modifier = Modifier.Companion
+                    modifier = Modifier
                         .height(60.dp),
                     layoutIcon = R.drawable.column_icon,
                     onLayoutClick = onLayoutClick,
                     onSoftClick = onSoftClick
                 )
+            }
+            items(listMusic) {
+                    music -> GridMusicLayout(
+                modifier = modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight()
+                ,
+                music = music,
+                onDeleteClick = onDeleteClick)
             }
         }
     }
@@ -132,40 +214,40 @@ fun Head(
     )
     {
         Text(
-            modifier = Modifier.Companion
-                .align(Alignment.Companion.Center),
+            modifier = Modifier
+                .align(Alignment.Center),
             text = "My Playlist",
-            fontWeight = FontWeight.Companion.Bold,
+            fontWeight = FontWeight.Bold,
             fontSize = 25.sp,
-            color = Color.Companion.White
+            color = Color.White
         )
-        Row(
+        Row (
             modifier = modifier
-                .align(Alignment.Companion.CenterEnd)
+                .align(Alignment.CenterEnd)
                 .padding(
                     end = 8.dp
                 ),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.Companion.CenterVertically
-        ) {
+            verticalAlignment = Alignment.CenterVertically
+        ){
             Icon(
-                modifier = Modifier.Companion
+                modifier = Modifier
                     .clickable(
                         onClick = onLayoutClick
                     )
                     .size(20.dp, 20.dp),
                 painter = painterResource(layoutIcon),
                 contentDescription = "layout icon",
-                tint = Color.Companion.White
+                tint = Color.White
             )
 
             Icon(
-                modifier = Modifier.Companion
+                modifier = Modifier
                     .clickable(onClick = onSoftClick)
                     .size(25.dp, 25.dp),
                 painter = painterResource(R.drawable.soft_icon),
                 contentDescription = "soft_icon",
-                tint = Color.Companion.White
+                tint = Color.White
             )
         }
     }
@@ -175,56 +257,58 @@ fun Head(
 @Composable
 fun ColumnMusicLayout(
     modifier: Modifier = Modifier,
-    music:Music = Music(
-        "C:/Users/Admin/HaiVN/app/src/main/res/drawable/music1.webp",
+    music: Music = Music(R.drawable.music1,
         "grainy days",
         "moody",
         "04:30"),
     onDeleteClick: (Music)->Unit = {}
 ){
-    Row(
+    Row (
         modifier = modifier
             .padding(8.dp),
-        verticalAlignment = Alignment.Companion.CenterVertically,
+        verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
-        Row(
+    ){
+        Row (
             modifier = modifier,
-            verticalAlignment = Alignment.Companion.CenterVertically,
+            verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
-        ) {
+        ){
             Row {
-                DrawImageFromPath(mp3FilePath = music.link)
-                Column(
-                    modifier = Modifier.Companion
+                Image(
+                    painter = painterResource(music.image),
+                    contentDescription = "Avatar"
+                )
+                Column (
+                    modifier = Modifier
                         .padding(
                             start = 8.dp
                         )
-                ) {
+                ){
                     Text(
                         text = music.name,
-                        fontWeight = FontWeight.Companion.Bold,
-                        color = Color.Companion.White
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
                     )
                     Text(
                         text = music.author,
-                        color = Color.Companion.White
+                        color = Color.White
                     )
                 }
             }
-            Row(
-                modifier = Modifier.Companion
+            Row (
+                modifier = Modifier
                     .padding(
                         end = 8.dp
                     ),
-                verticalAlignment = Alignment.Companion.CenterVertically,
+                verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
-            ) {
+            ){
                 Text(
                     text = music.duration,
-                    color = Color.Companion.White
+                    color = Color.White
                 )
-                Spacer(modifier = Modifier.Companion.width(10.dp))
+                Spacer(modifier = Modifier.width(10.dp))
                 KebabMenu(
                     music = music,
                     onDeleteClick = onDeleteClick
@@ -238,7 +322,7 @@ fun ColumnMusicLayout(
 fun GridMusicLayout(
     modifier: Modifier = Modifier,
     music: Music = Music(
-        "C:/Users/Admin/HaiVN/app/src/main/res/drawable/music1.webp",
+        R.drawable.music1,
         "grainy days",
         "moody",
         "04:30"
@@ -249,35 +333,38 @@ fun GridMusicLayout(
         modifier = modifier
             .fillMaxWidth()
             .padding(8.dp),
-        horizontalAlignment = Alignment.Companion.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Box {
-            DrawImageFromPath(modifier = Modifier
-                .size(100.dp, 100.dp),
-                mp3FilePath = music.link)
+        Box{
+            Image(
 
+                modifier = Modifier
+                    .size(100.dp, 100.dp),
+                painter = painterResource(music.image),
+                contentDescription = "Avatar"
+            )
             KebabMenu(
-                modifier = Modifier.Companion
-                    .align(Alignment.Companion.TopEnd),
+                modifier = Modifier
+                    .align(Alignment.TopEnd),
                 music = music,
                 onDeleteClick = onDeleteClick
             )
         }
         Text(
             text = music.name,
-            fontWeight = FontWeight.Companion.Bold,
+            fontWeight = FontWeight.Bold,
             fontSize = 16.sp,
-            color = Color.Companion.White
+            color = Color.White
         )
         Text(
             text = music.author,
             fontSize = 12.sp,
-            color = Color.Companion.Gray
+            color = Color.Gray
         )
         Text(
             text = music.duration,
             fontSize = 12.sp,
-            color = Color.Companion.White
+            color = Color.White
         )
     }
 }
@@ -292,7 +379,7 @@ fun KebabMenu(
     Box(
         modifier = modifier
             .padding(4.dp)
-    ) {
+    ){
         IconButton(
             modifier = modifier
                 .size(24.dp, 24.dp),
@@ -302,13 +389,12 @@ fun KebabMenu(
                 modifier = modifier
                     .size(20.dp, 20.dp)
                     .background(
-                        color = Color.Companion.Black.copy(alpha = 0.7f),
+                        color = Color.Black.copy(alpha = 0.7f),
                         shape = CircleShape
                     ),
                 painter = painterResource(R.drawable.kebab_menu),
                 contentDescription = "Delete Icon",
-                tint = Color.Companion.White
-            )
+                tint = Color.White)
         }
         DropdownMenu(
             expanded = expanded,
@@ -318,8 +404,7 @@ fun KebabMenu(
                 text = { Text("Delete") },
                 onClick = {
                     expanded = false
-                    onDeleteClick(music)
-                },
+                    onDeleteClick(music) },
                 leadingIcon = {
                     Icon(
                         painter = painterResource(R.drawable.baseline_delete_24),
@@ -328,31 +413,5 @@ fun KebabMenu(
                 }
             )
         }
-    }
-}
-
-@Composable
-fun DrawImageFromPath(modifier: Modifier = Modifier, mp3FilePath: String) {
-    var albumArtBitmap by remember { mutableStateOf<android.graphics.Bitmap?>(null) }
-
-    val retriever = MediaMetadataRetriever()
-    try {
-        retriever.setDataSource(mp3FilePath)
-        val art = retriever.embeddedPicture
-        if (art != null) {
-            albumArtBitmap = BitmapFactory.decodeByteArray(art, 0, art.size)
-        }
-    } catch (e: Exception) {
-        e.printStackTrace()
-    } finally {
-        retriever.release()
-    }
-
-    albumArtBitmap?.let {
-        Image(
-            bitmap = it.asImageBitmap(),
-            contentDescription = "Album Art",
-            modifier = modifier
-        )
     }
 }

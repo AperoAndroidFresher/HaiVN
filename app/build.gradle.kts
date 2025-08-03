@@ -40,6 +40,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.accompanist.permissions.v0373)
     implementation(libs.coil.kt.coil.compose)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.core.ktx)

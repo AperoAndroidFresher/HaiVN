@@ -1,4 +1,6 @@
 [versions]
+accompanistPermissions = "<version>"
+accompanistPermissionsVersion = "0.37.3"
 agp = "8.10.1"
 coilCompose = "2.7.0"
 coilComposeVersion = "3.3.0"
@@ -20,6 +22,8 @@ navigation3UiAndroid = "1.0.0-alpha05"
 volley = "1.2.1"
 
 [libraries]
+accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
+accompanist-permissions-v0373 = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissionsVersion" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilCompose" }

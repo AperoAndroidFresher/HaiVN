@@ -246,7 +246,7 @@ fun Screen(
             )
         }
         MyCustomDialog(
-            modifier = Modifier.Companion
+            modifier = Modifier
                 .height(250.dp),
             visible = state.value.visibleDialog,
             onDismissRequest = {

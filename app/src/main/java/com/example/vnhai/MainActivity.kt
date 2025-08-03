@@ -22,7 +22,6 @@ import androidx.navigation3.ui.NavDisplay
 import com.example.vnhai.feature.home.Home
 import com.example.vnhai.feature.library.LibraryScreen
 import com.example.vnhai.feature.library.LibraryViewModel
-import com.example.vnhai.feature.myplaylist.MyPlaylist
 import com.example.vnhai.feature.profile.Profile
 import com.example.vnhai.feature.profile.ProfileViewModel
 import com.example.vnhai.feature.signin.LoadingScreen
@@ -31,6 +30,7 @@ import com.example.vnhai.feature.signin.SignInViewModel
 import com.example.vnhai.feature.signup.SignUpScreen
 import com.example.vnhai.feature.signup.SignUpViewModel
 import com.example.vnhai.ui.theme.VNHaiTheme
+import com.example.vnhai.view.MyPlaylist
 import kotlinx.coroutines.delay
 
 sealed interface AppScreen{
@@ -164,3 +164,4 @@ fun App(
         }
     }
 }
+
