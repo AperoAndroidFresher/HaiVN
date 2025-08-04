@@ -26,7 +26,7 @@ sealed interface SignUpIntent{
     data class ChangeConfirmError(val confirmError: Boolean): SignUpIntent
     data class ChangeEmailError(val emailError: Boolean): SignUpIntent
 
-
+    object SaveCurrentUser: SignUpIntent
     object VisiblePassword: SignUpIntent
     object VisibleConfirm: SignUpIntent
 

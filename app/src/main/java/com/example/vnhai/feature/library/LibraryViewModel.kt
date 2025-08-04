@@ -1,12 +1,12 @@
 package com.example.vnhai.feature.library
 
 import android.content.ContentResolver
-import android.content.Context
 import android.net.Uri
 import android.provider.MediaStore
-import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import com.example.vnhai.Music
+import com.example.vnhai.convertFromMilliSecondToMinuteAndSecond
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -59,7 +59,7 @@ class LibraryViewModel(): ViewModel() {
                             val title = it.getString(titleColumn)
                             val artist = it.getString(artistColumn)
                             val data = it.getString(dataColumn)
-                            val duration = it.getString(durationColumn)
+                            val duration = convertFromMilliSecondToMinuteAndSecond(it.getString(durationColumn))
 
                             listMusic.add(Music(data, title, artist, duration))
                         }
@@ -73,10 +73,25 @@ class LibraryViewModel(): ViewModel() {
 
             is LibraryIntent.AddToPlaylist -> TODO()
             is LibraryIntent.Share -> TODO()
+            LibraryIntent.ChangeVisiblePlaylist -> {
+                _uiState.update { currentState ->
+                    currentState.copy(isVisiblePlaylist = !uiState.value.isVisiblePlaylist)}
+            }
         }
     }
 
     fun processEvent(event: LibraryEvent){
 
+    }
+}
+
+class LibraryViewModelFactory(): ViewModelProvider.Factory
+{
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(LibraryViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return LibraryViewModel() as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

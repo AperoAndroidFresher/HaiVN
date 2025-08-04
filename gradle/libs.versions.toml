@@ -19,6 +19,7 @@ navigationCompose = "2.9.2"
 navigationRuntimeAndroid = "2.9.2"
 navigationComposeJvmstubs = "2.9.2"
 navigation3UiAndroid = "1.0.0-alpha05"
+roomRuntime = "2.7.2"
 volley = "1.2.1"
 
 [libraries]
@@ -26,6 +27,8 @@ accompanist-permissions = { module = "com.google.accompanist:accompanist-permiss
 accompanist-permissions-v0373 = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissionsVersion" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
+androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomRuntime" }
+androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomRuntime" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilCompose" }
 coil-compose-v250 = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilKtCoilCompose" }
 coil-compose-v330 = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilComposeVersion" }

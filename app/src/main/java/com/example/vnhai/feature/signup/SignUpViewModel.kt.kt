@@ -1,9 +1,11 @@
 package com.example.vnhai.feature.signup
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import com.example.vnhai.User
-import com.example.vnhai.checkUserName
 import com.example.vnhai.isValidateEmail
+import com.example.vnhai.model.dao.ManagerDao
+import com.example.vnhai.model.entity.UserEntity
 import com.example.vnhai.onlyLetters
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,8 +14,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlin.String
 
-class SignUpViewModel: ViewModel()
+class SignUpViewModel(private val managerDao: ManagerDao): ViewModel()
 {
     private val _uiState = MutableStateFlow<SignUpState>(SignUpState())
     val uiState: StateFlow<SignUpState> = _uiState.asStateFlow()
@@ -107,10 +110,32 @@ class SignUpViewModel: ViewModel()
                     currentState.copy(userError = intent.userError)
                 }
             }
+
+            SignUpIntent.SaveCurrentUser -> {
+                managerDao.insertUser(UserEntity(
+                    username = uiState.value.username,
+                    password = uiState.value.password,
+                    phone = "",
+                    email = uiState.value.email,
+                    name = "",
+                    universityName = "",
+                    description = "",
+                ))
+            }
         }
     }
 
     fun processEvent(event: SignUpEvent){
 
+    }
+}
+
+class SignUpViewModelFactory(private val managerDao: ManagerDao): ViewModelProvider.Factory{
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(SignUpViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return SignUpViewModel(managerDao) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

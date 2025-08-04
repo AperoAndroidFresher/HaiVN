@@ -5,6 +5,7 @@ import com.example.vnhai.Music
 
 data class LibraryState(
     val isLocal: Boolean = true,
+    val isVisiblePlaylist: Boolean = false,
     val listMusic: List<Music> = listOf<Music>()
 )
 
@@ -13,6 +14,7 @@ sealed interface LibraryIntent{
     data class Share(val music: Music): LibraryIntent
     data class LoadData(val context: Context): LibraryIntent
     data class ChangeDirection(val isLocal: Boolean): LibraryIntent
+    data object ChangeVisiblePlaylist: LibraryIntent
 }
 
 sealed interface LibraryEvent

@@ -30,7 +30,8 @@ import com.example.vnhai.feature.signin.SignInViewModel
 import com.example.vnhai.feature.signup.SignUpScreen
 import com.example.vnhai.feature.signup.SignUpViewModel
 import com.example.vnhai.ui.theme.VNHaiTheme
-import com.example.vnhai.view.MyPlaylist
+import com.example.vnhai.feature.myplaylist.MyPlaylist
+import com.example.vnhai.feature.signup.SignUpViewModelFactory
 import kotlinx.coroutines.delay
 
 sealed interface AppScreen{
@@ -38,14 +39,18 @@ sealed interface AppScreen{
     data object SignUp : AppScreen
     data object Home : AppScreen
     data object Profile : AppScreen
-    data object Playlist : AppScreen
+    data object Library : AppScreen
     data object MyPlaylist: AppScreen
 }
 
 
 class MainActivity : ComponentActivity() {
     private val signInViewModel: SignInViewModel by viewModels()
-    private val signUpViewModel: SignUpViewModel by viewModels()
+    private val signUpViewModel: SignUpViewModel by viewModels(){
+        SignUpViewModelFactory(
+            (application as VNHaiApplication).database.managerDao()
+        )
+    }
     private val profileViewModel: ProfileViewModel by viewModels()
     private val libraryViewModel: LibraryViewModel by viewModels()
 
@@ -123,12 +128,6 @@ fun App(
                             AppScreen.SignUp -> NavEntry(key){
                                 SignUpScreen(
                                     viewModel = signUpViewModel,
-                                    saveCurrentUser = { user ->
-                                        if(checkUserName(user.username))
-                                        {
-                                            listUser.add(user)
-                                        }
-                                    },
                                     onSignUpClick = {backStack.add(AppScreen.SignIn)},
                                 )
                             }
@@ -137,7 +136,7 @@ fun App(
                                 Home(
                                     onProfileIconClick = {backStack.add(AppScreen.Profile)},
                                     onHomeButtonClick = {},
-                                    onPlaylistButtonClick = {backStack.add(AppScreen.Playlist)},
+                                    onPlaylistButtonClick = {backStack.add(AppScreen.Library)},
                                     onMyPlaylistButtonClick = {backStack.add(AppScreen.MyPlaylist)}
                                 )
                             }
@@ -154,8 +153,11 @@ fun App(
                                 MyPlaylist()
                             }
 
-                            AppScreen.Playlist -> NavEntry(key){
-                                LibraryScreen(viewModel = libraryViewModel)
+                            AppScreen.Library -> NavEntry(key){
+                                LibraryScreen(
+                                    viewModel = libraryViewModel,
+                                    navigationToPlaylist = {backStack.add(AppScreen.MyPlaylist)}
+                                    )
                             }
                         }
                     }

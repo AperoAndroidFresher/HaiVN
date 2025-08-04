@@ -4,7 +4,6 @@ import android.Manifest
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.media.MediaMetadataRetriever
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -56,13 +55,13 @@ import androidx.compose.ui.window.Dialog
 import com.example.vnhai.Music
 import com.example.vnhai.Playlist
 import com.example.vnhai.R
-import com.example.vnhai.view.KebabMenu
-import com.example.vnhai.view.listMusic
+import com.example.vnhai.myPlaylist
 
 @Composable
 fun LibraryScreen(
     modifier: Modifier = Modifier,
-    viewModel: LibraryViewModel = LibraryViewModel()
+    viewModel: LibraryViewModel = LibraryViewModel(),
+    navigationToPlaylist: () -> Unit,
 ) {
     val state = viewModel.uiState.collectAsState()
 
@@ -75,6 +74,7 @@ fun LibraryScreen(
     ) {
         hasPermission = it
     }
+
     Column(modifier = modifier
         .fillMaxSize()
         .background(color = Color.Black))
@@ -93,14 +93,26 @@ fun LibraryScreen(
                 LaunchedEffect(Unit) {
                     viewModel.processIntent(LibraryIntent.LoadData(context))
                 }
+                Box {
+                    LocalScreen(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(color = Color.Black),
+                        listMusic = state.value.listMusic,
+                        onAddToPlaylistClick = {viewModel.processIntent(LibraryIntent.ChangeVisiblePlaylist)}
+                    )
 
-                LocalScreen(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                        .background(color = Color.Black),
-                    listMusic = state.value.listMusic
-                )
+                    ChoosePlaylistDialog(
+                        modifier = Modifier
+                            .size(353.dp, 458.dp),
+                        isVisible = state.value.isVisiblePlaylist,
+                        onDismissRequest = {viewModel.processIntent(LibraryIntent.ChangeVisiblePlaylist)},
+                        onAddPlaylistClick = {
+                            navigationToPlaylist()
+                            viewModel.processIntent(LibraryIntent.ChangeVisiblePlaylist)
+                        }
+                    )
+                }
             }
             else
             {
@@ -123,6 +135,7 @@ fun LibraryScreen(
 fun LocalScreen(
     modifier: Modifier = Modifier,
     listMusic: List<Music> = listOf(),
+    onAddToPlaylistClick: (Music) -> Unit = {}
 )
 {
     Box(modifier = modifier)
@@ -136,7 +149,7 @@ fun LocalScreen(
                 modifier = Modifier
                     .fillMaxWidth(),
                 music = music,
-                onAddToPlaylistClick = { },
+                onAddToPlaylistClick = onAddToPlaylistClick,
                 onShareClick = {})
             }
         }
@@ -268,51 +281,36 @@ fun ColumnMusicLayout(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Row(
-            modifier = modifier,
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+        DrawImageFromPath(mp3FilePath = music.link)
+        Column(
+            modifier = Modifier
+                .padding(
+                    start = 8.dp
+                )
+                .weight(1f)
         ) {
-            Row {
-                Log.d("main", music.name)
-                DrawImageFromPath(mp3FilePath = music.link)
-                Column(
-                    modifier = Modifier
-                        .padding(
-                            start = 8.dp
-                        )
-                ) {
-                    Text(
-                        text = music.name,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                    Text(
-                        text = music.author,
-                        color = Color.White
-                    )
-                }
-            }
-            Row(
-                modifier = Modifier
-                    .padding(
-                        end = 8.dp
-                    ),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = music.duration,
-                    color = Color.White
-                )
-                Spacer(modifier = Modifier.width(10.dp))
-                KebabMenu(
-                    music = music,
-                    onAddToPlaylistClick = onAddToPlaylistClick,
-                    onShareClick = onShareClick
-                )
-            }
+            Text(
+                text = music.name,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+            Text(
+                text = music.author,
+                color = Color.White
+            )
         }
+        Text(
+            text = music.duration,
+            color = Color.White
+        )
+        Spacer(modifier = Modifier.width(10.dp))
+        KebabMenu(
+            modifier = Modifier
+                .size(25.dp),
+            music = music,
+            onAddToPlaylistClick = onAddToPlaylistClick,
+            onShareClick = onShareClick
+        )
     }
 }
 
@@ -432,7 +430,8 @@ fun MyPermissionDialog(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding( start = 8.dp,
+                        .padding(
+                            start = 8.dp,
                             end = 8.dp,
                             top = 8.dp,
                             bottom = 16.dp
@@ -492,7 +491,9 @@ fun ChoosePlaylistDialog(
     modifier: Modifier = Modifier,
     isVisible: Boolean = false,
     myPlaylist: List<Playlist> = listOf<Playlist>(),
-    onDismissRequest: () -> Unit = {}
+    onDismissRequest: () -> Unit = {},
+    onAddPlaylistClick: () -> Unit = {},
+    onPlaylistClick: (Playlist) -> Unit = {},
 ){
     if(isVisible)
     {
@@ -503,14 +504,15 @@ fun ChoosePlaylistDialog(
                 modifier = modifier,
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFF1E1E1E)
+                    containerColor = Color(0xFF292929)
                 )
             ) {
                 Column (
-                    modifier = modifier
-                        .padding(top = 25.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(25.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ){
                     Text(
                         text = "Choose playlist",
@@ -518,33 +520,42 @@ fun ChoosePlaylistDialog(
                         fontWeight = FontWeight(700),
                         color = Color.White
                     )
-                }
-                if(myPlaylist.isEmpty())
-                {
-                    Text(
-                        text = "You don't have any playlists. Click the “+” button to add",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight(400),
-                        color = Color.White
-                    )
+                    if(myPlaylist.isEmpty())
+                    {
+                        Text(
+                            modifier = Modifier
+                                .padding(
+                                    start = 50.dp,
+                                    end = 50.dp,
+                                    top = 70.dp),
+                            text = "You don't have any playlists. Click the “+” button to add",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight(400),
+                            color = Color.White
+                        )
 
-                    Image(
-                        modifier = Modifier
-                            .clickable(onClick = {})
-                            .size(86.dp),
-                        painter = painterResource(R.drawable.add_playlist_icon),
-                        contentDescription = "add playlist icon"
-                    )
-                }
-                else
-                {
-                    LazyColumn {
-                        items(myPlaylist){ playlist ->
-                            PlaylistColumns(
-                                modifier = Modifier
-                                    .fillMaxWidth(),
-                                playlist = playlist
-                            )
+                        Image(
+                            modifier = Modifier
+                                .padding(top = 25.dp)
+                                .clickable(onClick = onAddPlaylistClick)
+                                .size(86.dp),
+                            painter = painterResource(R.drawable.add_playlist_icon),
+                            contentDescription = "add playlist icon"
+                        )
+                    }
+                    else
+                    {
+                        LazyColumn {
+                            items(myPlaylist){ playlist ->
+                                Playlist(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable(
+                                            onClick = {onPlaylistClick(playlist)}
+                                        ),
+                                    playlist = playlist
+                                )
+                            }
                         }
                     }
                 }
@@ -554,7 +565,7 @@ fun ChoosePlaylistDialog(
 }
 
 @Composable
-fun PlaylistColumns(
+fun Playlist(
     modifier: Modifier = Modifier,
     playlist: Playlist
 ){
@@ -599,24 +610,9 @@ fun PlaylistColumns(
 @Composable
 fun PreviewLibrary()
 {
-    Row(modifier = Modifier
-        .fillMaxSize()
-        .background(color = Color.Black),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        HeadLibrary(modifier = Modifier
-            .height(180.dp)
-            .fillMaxWidth(),
-            isLocal = true,
-        )
-
-        LocalScreen(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(400.dp)
-                .background(color = Color.Black),
-            listMusic = listOf(Music("", "Hai dep trai", "Hai", "4:30"))
-        )
-    }
+    ChoosePlaylistDialog(
+        modifier = Modifier
+            .size(353.dp, 458.dp),
+        isVisible = true
+    )
 }

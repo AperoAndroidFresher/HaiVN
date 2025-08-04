@@ -12,10 +12,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -26,16 +22,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.vnhai.R
 import com.example.vnhai.User
-import com.example.vnhai.checkUserName
 import com.example.vnhai.feature.signin.MyButton
 import com.example.vnhai.feature.signin.MyOutLineTextField
-import com.example.vnhai.isValidateEmail
-import com.example.vnhai.onlyLetters
 
 @Composable
 fun SignUpScreen(
     modifier: Modifier = Modifier,
-    saveCurrentUser: (User)->Unit = {},
     onSignUpClick: () -> Unit = {},
     viewModel: SignUpViewModel
 ) {
@@ -162,7 +154,7 @@ fun SignUpScreen(
                     viewModel.processIntent(SignUpIntent.SignUp)
                     if(state.value.userError && state.value.passwordError && state.value.confirmError && state.value.emailError)
                     {
-                        saveCurrentUser(User(state.value.username, state.value.password))
+                        viewModel.processIntent(SignUpIntent.SaveCurrentUser)
                         onSignUpClick()
                     }
                 })

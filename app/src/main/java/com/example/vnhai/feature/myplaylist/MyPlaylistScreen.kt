@@ -1,4 +1,4 @@
-package com.example.vnhai.view
+package com.example.vnhai.feature.myplaylist
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
@@ -37,8 +36,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.vnhai.Playlist
 import com.example.vnhai.R
 
 data class Music(
@@ -118,7 +119,7 @@ fun MyPlaylist(
     var columnLayout by remember { mutableStateOf(false) }
     var listMusicState by remember { mutableStateOf(listMusic) }
     var mutableListMusic = listMusicState.toMutableList()
-    Screen(
+    PlaylistScreen(
         modifier = modifier
             .fillMaxSize()
             .background(color = Color.Black),
@@ -137,8 +138,71 @@ fun MyPlaylist(
     )
 }
 
+
 @Composable
-fun Screen(
+fun MyPlaylistScreen(
+    modifier: Modifier = Modifier,
+    myPlaylist: List<Playlist> = listOf(),
+    onPlaylistClick: (Playlist)->Unit = {}
+){
+    LazyColumn (modifier = modifier){
+        items(myPlaylist) { playlist ->
+            Playlist(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(
+                        onClick = { onPlaylistClick(playlist) }
+                    ),
+                playlist = playlist
+            )
+        }
+    }
+}
+
+@Composable
+fun Playlist(
+    modifier: Modifier = Modifier,
+    playlist: Playlist
+){
+    Row (
+        modifier = modifier
+            .padding(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ){
+        Row (
+            modifier = modifier,
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ){
+            Row {
+                Image(
+                    painter = painterResource(playlist.image),
+                    contentDescription = "Avatar"
+                )
+                Column (
+                    modifier = Modifier
+                        .padding(
+                            start = 8.dp
+                        )
+                ){
+                    Text(
+                        text = playlist.name,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                    Text(
+                        text = "${playlist.listMusic.size} songs",
+                        color = Color.White
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun PlaylistScreen(
     modifier: Modifier = Modifier,
     columnLayout: Boolean = true,
     listMusic: List<Music>,
@@ -147,54 +211,50 @@ fun Screen(
     onDeleteClick: (music:Music) -> Unit = {},
 )
 {
-    if (columnLayout)
-    {
-        LazyColumn(
-            modifier = Modifier.background(color = Color.Black)
-        ){
-            item {
-                Head(
-                    modifier = Modifier
-                        .height(60.dp),
-                    layoutIcon = R.drawable.grid_icon,
-                    onLayoutClick = onLayoutClick,
-                    onSoftClick = onSoftClick
-                )
-            }
-            items(listMusic) {
-                    music -> ColumnMusicLayout(
+    Column(
+        modifier = modifier
+    ){
+        Head(
+            modifier = Modifier
+                .padding(top = 50.dp)
+                .height(60.dp),
+            columnLayout = columnLayout,
+            onLayoutClick = onLayoutClick,
+            onSoftClick = onSoftClick
+        )
+
+        if (columnLayout)
+        {
+            LazyColumn(
                 modifier = Modifier
-                    .fillMaxWidth(),
-                music = music,
-                onDeleteClick = onDeleteClick)
+                    .weight(1f)
+            ){
+                items(listMusic) {
+                        music -> ColumnMusicLayout(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    music = music,
+                    onDeleteClick = onDeleteClick)
+                }
             }
         }
-    }
-    else
-    {
-        LazyVerticalGrid(
-            modifier = Modifier
-                .background(color = Color.Black)
-                .fillMaxHeight(),
-            columns = GridCells.Fixed(2),
-        ) {
-            item(span = { GridItemSpan(maxLineSpan) }){
-                Head(
-                    modifier = Modifier
-                        .height(60.dp),
-                    layoutIcon = R.drawable.column_icon,
-                    onLayoutClick = onLayoutClick,
-                    onSoftClick = onSoftClick
-                )
-            }
-            items(listMusic) {
-                    music -> GridMusicLayout(
-                modifier = modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight()
-                ,
-                music = music,
-                onDeleteClick = onDeleteClick)
+        else
+        {
+            LazyVerticalGrid(
+                modifier = Modifier
+                    .background(color = Color.Black)
+                    .fillMaxHeight(),
+                columns = GridCells.Fixed(2),
+            ) {
+                items(listMusic) {
+                        music -> GridMusicLayout(
+                    modifier = modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight()
+                    ,
+                    music = music,
+                    onDeleteClick = onDeleteClick)
+                }
             }
         }
     }
@@ -203,7 +263,7 @@ fun Screen(
 @Composable
 fun Head(
     modifier: Modifier = Modifier,
-    layoutIcon: Int = R.drawable.grid_icon,
+    columnLayout: Boolean = true,
     onLayoutClick: ()->Unit = {},
     onSoftClick: ()->Unit = {}
 ){
@@ -222,7 +282,7 @@ fun Head(
             color = Color.White
         )
         Row (
-            modifier = modifier
+            modifier = Modifier
                 .align(Alignment.CenterEnd)
                 .padding(
                     end = 8.dp
@@ -236,7 +296,7 @@ fun Head(
                         onClick = onLayoutClick
                     )
                     .size(20.dp, 20.dp),
-                painter = painterResource(layoutIcon),
+                painter = painterResource(if(columnLayout) R.drawable.grid_icon else R.drawable.column_icon),
                 contentDescription = "layout icon",
                 tint = Color.White
             )
@@ -414,4 +474,14 @@ fun KebabMenu(
             )
         }
     }
+}
+
+@Preview
+@Composable
+fun Preview1(){
+    MyPlaylist(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(color = Color.Black),
+    )
 }
