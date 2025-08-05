@@ -1,5 +1,11 @@
 [versions]
+accompanistPermissions = "<version>"
+accompanistPermissionsVersion = "0.37.3"
 agp = "8.10.1"
+coilCompose = "2.7.0"
+coilComposeVersion = "3.3.0"
+coilKtCoilCompose = "2.5.0"
+coilKtCoilComposeVersion = "2.4.0"
 kotlin = "2.0.21"
 coreKtx = "1.16.0"
 junit = "4.13.2"
@@ -12,10 +18,22 @@ adaptiveAndroid = "1.1.0"
 navigationCompose = "2.9.2"
 navigationRuntimeAndroid = "2.9.2"
 navigationComposeJvmstubs = "2.9.2"
+navigation3UiAndroid = "1.0.0-alpha05"
+roomRuntime = "2.7.2"
+volley = "1.2.1"
 
 [libraries]
+accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
+accompanist-permissions-v0373 = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissionsVersion" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
+androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomRuntime" }
+androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomRuntime" }
+androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomRuntime" }
+coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilCompose" }
+coil-compose-v250 = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilKtCoilCompose" }
+coil-compose-v330 = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilComposeVersion" }
+coil-kt-coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilKtCoilComposeVersion" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
@@ -32,6 +50,8 @@ androidx-material3 = { group = "androidx.compose.material3", name = "material3" 
 androidx-adaptive-android = { group = "androidx.compose.material3.adaptive", name = "adaptive-android", version.ref = "adaptiveAndroid" }
 androidx-navigation-runtime-android = { group = "androidx.navigation", name = "navigation-runtime-android", version.ref = "navigationRuntimeAndroid" }
 androidx-navigation-compose-jvmstubs = { group = "androidx.navigation", name = "navigation-compose-jvmstubs", version.ref = "navigationComposeJvmstubs" }
+androidx-navigation3-ui-android = { group = "androidx.navigation3", name = "navigation3-ui-android", version.ref = "navigation3UiAndroid" }
+volley = { group = "com.android.volley", name = "volley", version.ref = "volley" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

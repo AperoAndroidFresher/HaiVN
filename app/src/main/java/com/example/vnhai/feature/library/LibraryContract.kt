@@ -1,0 +1,27 @@
+package com.example.vnhai.feature.library
+
+import android.content.Context
+import com.example.vnhai.Music
+
+data class LibraryState(
+    val isLocal: Boolean = true,
+    val isVisiblePlaylist: Boolean = false,
+    val listMusic: List<Music> = listOf<Music>(),
+    val hasPermission: Boolean = false,
+    val isPermissionDialogVisible: Boolean = false
+)
+
+sealed interface LibraryIntent{
+    data class AddToPlaylist(val music: Music): LibraryIntent
+    data class Share(val music: Music): LibraryIntent
+    data class LoadData(val context: Context): LibraryIntent
+    data class ChangeDirection(val isLocal: Boolean): LibraryIntent
+    data class GetPermissionState(val context: Context): LibraryIntent
+    data class ChangeVisiblePermissionDialog(val visible: Boolean): LibraryIntent
+    data object ChangeVisiblePlaylist: LibraryIntent
+}
+
+sealed interface LibraryEvent
+{
+    data object AskPermission: LibraryEvent
+}
