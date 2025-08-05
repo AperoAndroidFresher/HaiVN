@@ -54,17 +54,17 @@ import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.vnhai.R
-import com.example.vnhai.feature.signup.SignUpViewModel
+import com.example.vnhai.feature.myplaylist.Head
 import com.example.vnhai.onlyLetters
 
 @Composable
 fun Profile(
-    modifier: Modifier = Modifier,
     darkTheme: Boolean,
-    onThemeIconClick: () -> Unit = {},
     viewModel: ProfileViewModel,
+    modifier: Modifier = Modifier,
+    onThemeIconClick: () -> Unit = {},
 ) {
-    Screen(darkTheme = darkTheme,
+    Screen(isDarkTheme = darkTheme,
         onThemeIconClick = onThemeIconClick,
         viewModel = viewModel
     )
@@ -72,15 +72,15 @@ fun Profile(
 
 @Composable
 fun Screen(
-    darkTheme: Boolean,
-    onThemeIconClick: () -> Unit,
+    isDarkTheme: Boolean,
     viewModel: ProfileViewModel,
+    onThemeIconClick: () -> Unit,
 ) {
     val focusManager = LocalFocusManager.current
     val state = viewModel.uiState.collectAsState()
 
     Box(
-        modifier = Modifier.Companion
+        modifier = Modifier
             .fillMaxSize()
             .clickable {
                 focusManager.clearFocus()
@@ -92,58 +92,35 @@ fun Screen(
     )
     {
         Column(
-            modifier = Modifier.Companion.padding(
+            verticalArrangement = Arrangement.SpaceBetween,
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(
                 top = 50.dp,
                 start = 16.dp,
                 end = 16.dp,
                 bottom = 16.dp
             ),
-            verticalArrangement = Arrangement.SpaceBetween,
-            horizontalAlignment = Alignment.Companion.CenterHorizontally
         ) {
-            Box(
-                modifier = Modifier.Companion
-                    .height(50.dp)
-                    .fillMaxWidth()
-            )
-            {
-                ThemeIcon(
-                    modifier = Modifier.Companion
-                        .size(35.dp)
-                        .align(Alignment.Companion.CenterStart),
-                    darkTheme = darkTheme,
-                    onClick = onThemeIconClick
-                )
-                Text(
-                    text = "MY INFORMATION",
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Companion.Bold,
-                    modifier = Modifier.Companion
-                        .align(Alignment.Companion.Center),
-                    color = MaterialTheme.colorScheme.primary
-                )
-                MyEditIcon(
-                    modifier = Modifier.Companion
-                        .size(35.dp)
-                        .align(Alignment.Companion.CenterEnd),
-                    visible = state.value.visibleIcon,
-                    onClick = {
-                        viewModel.processIntent(ProfileIntent.ChangeVisibleIcon)
-                    }
-                )
-            }
 
+            HeadProfile(
+                isDarkTheme = isDarkTheme,
+                onThemeIconClick = onThemeIconClick,
+                onEditIconClick = {
+                    viewModel.processIntent(ProfileIntent.ChangeVisibleIcon)
+                },
+                isEditIconVisible = state.value.visibleIcon
+            )
             MyAvatar(
-                modifier = Modifier.Companion.size(150.dp),
-                enabled = !state.value.visibleIcon
+                enabled = !state.value.visibleIcon,
+                modifier = Modifier.size(150.dp),
             )
 
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.Companion
+                modifier = Modifier
                     .height(90.dp)
             ) {
-                val modifier: Modifier = Modifier.Companion
+                val modifier: Modifier = Modifier
                     .weight(1f)
 
                 MyOutlinedTextField(
@@ -153,9 +130,9 @@ fun Screen(
                     placeholder = "Enter your name",
                     enabled = !state.value.visibleIcon,
                     isError = state.value.hasNameError,
-                    keyboardOptions = KeyboardOptions.Companion.Default.copy(
-                        keyboardType = KeyboardType.Companion.Text,
-                        imeAction = ImeAction.Companion.Done
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Done
                     ),
                     keyboardActions = KeyboardActions(
                         onDone = {
@@ -170,17 +147,16 @@ fun Screen(
                     }
                 )
 
-                Spacer(modifier = Modifier.Companion.weight(0.05f))
+                Spacer(modifier = Modifier.weight(0.05f))
 
                 MyOutlinedTextField(
-                    modifier = modifier,
                     textContent = "PHONE",
                     outlineTextFieldContent = state.value.phone,
                     placeholder = "Enter your phone",
                     enabled = !state.value.visibleIcon,
-                    keyboardOptions = KeyboardOptions.Companion.Default.copy(
-                        keyboardType = KeyboardType.Companion.Number,
-                        imeAction = ImeAction.Companion.Done
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        keyboardType = KeyboardType.Number,
+                        imeAction = ImeAction.Done
                     ),
                     keyboardActions = KeyboardActions(
                         onDone = {
@@ -189,21 +165,20 @@ fun Screen(
                     ),
                     onValueChange = {
                         viewModel.processIntent(ProfileIntent.EnterPhone(it))
-                    }
+                    },
+                    modifier = modifier,
                 )
             }
 
             MyOutlinedTextField(
-                modifier = Modifier.Companion
-                    .height(90.dp),
                 textContent = "University Name",
                 outlineTextFieldContent = state.value.universityName,
                 placeholder = "Enter your university name ....",
                 enabled = !state.value.visibleIcon,
                 isError = state.value.hasUniversityNameError,
-                keyboardOptions = KeyboardOptions.Companion.Default.copy(
-                    keyboardType = KeyboardType.Companion.Text,
-                    imeAction = ImeAction.Companion.Done
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    keyboardType = KeyboardType.Text,
+                    imeAction = ImeAction.Done
                 ),
                 keyboardActions = KeyboardActions(
                     onDone = {
@@ -215,44 +190,87 @@ fun Screen(
                 ),
                 onValueChange = {
                     viewModel.processIntent(ProfileIntent.EnterUniversity(it))
-                }
+                },
+                modifier = Modifier
+                    .height(90.dp),
             )
 
             MyOutlinedTextField(
-                modifier = Modifier.Companion
-                    .height(150.dp)
-                    .align(Alignment.Companion.Start),
                 textContent = "DESCRIBE YOURSELF",
                 outlineTextFieldContent = state.value.description,
                 placeholder = "Enter a description about yourself ....",
                 enabled = !state.value.visibleIcon,
                 isSingleLine = false,
-                keyboardOptions = KeyboardOptions.Companion.Default.copy(
-                    keyboardType = KeyboardType.Companion.Text,
-                    imeAction = ImeAction.Companion.Done
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    keyboardType = KeyboardType.Text,
+                    imeAction = ImeAction.Done
                 ),
                 onValueChange = {
                     viewModel.processIntent(ProfileIntent.EnterDescription(it))
-                }
+                },
+                modifier = Modifier
+                    .height(150.dp)
+                    .align(Alignment.Start),
             )
 
             MySubmitButton(
-                modifier = Modifier.Companion
-                    .height(100.dp),
-                visible = !state.value.visibleIcon,
+
+                isVisible = !state.value.visibleIcon,
                 onClick = {
                     viewModel.processIntent(ProfileIntent.ChangeVisibleDialog(!(state.value.hasNameError && state.value.hasUniversityNameError)))
-                }
+                },
+                modifier = Modifier
+                    .height(100.dp),
             )
         }
         MyCustomDialog(
-            modifier = Modifier
-                .height(250.dp),
-            visible = state.value.visibleDialog,
+
+            isVisible = state.value.visibleDialog,
             onDismissRequest = {
                 viewModel.processIntent(ProfileIntent.ChangeVisibleDialog(false))
                 viewModel.processIntent(ProfileIntent.ChangeVisibleIcon)
-            }
+            },
+            modifier = Modifier
+                .height(250.dp),
+        )
+    }
+}
+
+@Composable
+fun HeadProfile(
+    isDarkTheme: Boolean,
+    modifier: Modifier = Modifier,
+    onThemeIconClick: ()->Unit = {},
+    onEditIconClick: ()->Unit = {},
+    isEditIconVisible: Boolean
+){
+    Box(
+        modifier = Modifier
+            .height(50.dp)
+            .fillMaxWidth()
+    )
+    {
+        ThemeIcon(
+            modifier = Modifier
+                .size(35.dp)
+                .align(Alignment.CenterStart),
+            isDarkTheme = isDarkTheme,
+            onClick = onThemeIconClick
+        )
+        Text(
+            text = "MY INFORMATION",
+            fontSize = 28.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier
+                .align(Alignment.Center),
+            color = MaterialTheme.colorScheme.primary
+        )
+        MyEditIcon(
+            modifier = Modifier
+                .size(35.dp)
+                .align(Alignment.CenterEnd),
+            isVisible = isEditIconVisible,
+            onClick = onEditIconClick,
         )
     }
 }
@@ -260,10 +278,10 @@ fun Screen(
 @Composable
 fun MyEditIcon(
     modifier: Modifier = Modifier,
-    visible: Boolean = true,
+    isVisible: Boolean = true,
     onClick: ()->Unit = {}
 ) {
-    if (visible)
+    if (isVisible)
     {
         Icon(
             modifier = modifier
@@ -280,10 +298,10 @@ fun MyEditIcon(
 @Composable
 fun ThemeIcon(
     modifier: Modifier = Modifier,
-    darkTheme: Boolean = false,
+    isDarkTheme: Boolean = false,
     onClick: ()->Unit = {}
 ) {
-    if (darkTheme)
+    if (isDarkTheme)
     {
         Icon(
             modifier = modifier
@@ -332,14 +350,14 @@ fun MyAvatar(
     ) {
         if (link != "") {
             MyImageFromUri(
-                modifier = Modifier.Companion
+                modifier = Modifier
                     .size(125.dp)
                     .padding(12.dp),
                 link
             )
         } else {
             Image(
-                modifier = Modifier.Companion
+                modifier = Modifier
                     .size(125.dp)
                     .padding(bottom = 12.dp),
                 painter = painterResource(R.drawable.cat),
@@ -349,9 +367,9 @@ fun MyAvatar(
 
         if (enabled) {
             Icon(
-                modifier = Modifier.Companion
+                modifier = Modifier
                     .size(30.dp)
-                    .align(alignment = Alignment.Companion.BottomCenter)
+                    .align(alignment = Alignment.BottomCenter)
                     .background(
                         color = MaterialTheme.colorScheme.background.copy(alpha = 0.7f),
                         shape = CircleShape
@@ -385,7 +403,7 @@ fun MyImageFromUri(
             .crossfade(true)
             .build(),
         contentDescription = "Avatar",
-        contentScale = ContentScale.Companion.Crop,
+        contentScale = ContentScale.Crop,
     )
 }
 
@@ -398,8 +416,8 @@ fun MyOutlinedTextField(
     enabled: Boolean = false,
     isError: Boolean = false,
     isSingleLine: Boolean = true,
-    keyboardOptions: KeyboardOptions = KeyboardOptions.Companion.Default,
-    keyboardActions: KeyboardActions = KeyboardActions.Companion.Default,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
     color: Color = MaterialTheme.colorScheme.primary,
     onValueChange: (String) -> Unit = {}
 ) {
@@ -444,10 +462,10 @@ fun MyOutlinedTextField(
 @Composable
 fun MySubmitButton(
     modifier: Modifier = Modifier,
-    visible: Boolean = false,
+    isVisible: Boolean = false,
     onClick: ()->Unit = {}
 ){
-    if (visible)
+    if (isVisible)
     {
         Button(
             onClick = onClick,
@@ -473,50 +491,50 @@ fun MySubmitButton(
 @Composable
 fun MyCustomDialog(
     modifier: Modifier = Modifier,
-    visible: Boolean = false,
+    isVisible: Boolean = false,
     onDismissRequest: () -> Unit
 ) {
-    if (visible)
+    if (isVisible)
     {
         Dialog(
             onDismissRequest = onDismissRequest
         ) {
             Card(
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
                 modifier = modifier
                     .background(
-                        color = Color.Companion.White,
+                        color = Color.White,
                         shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
                     )
                     .wrapContentSize(),
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
             ) {
                 Column(
-                    modifier = Modifier.Companion
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier
                         .fillMaxWidth()
                         .padding(8.dp)
                         .wrapContentSize(),
-                    horizontalAlignment = Alignment.Companion.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Image(
-                        modifier = Modifier.Companion
+                        painter = painterResource(R.drawable.baseline_check_circle_24),
+                        contentDescription = "Checked Icon",
+                        modifier = Modifier
                             .fillMaxWidth()
                             .weight(3f),
-                        painter = painterResource(R.drawable.baseline_check_circle_24),
-                        contentDescription = "Checked Icon"
                     )
                     Text(
-                        modifier = Modifier.Companion
-                            .padding(8.dp)
-                            .wrapContentSize(),
                         text = "Success!",
                         color = Color(0xFF4FA563),
                         fontSize = 35.sp,
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .wrapContentSize(),
                     )
                     Text(
-                        modifier = Modifier.Companion
-                            .padding(8.dp),
                         text = "Your information has been updated!",
+                        modifier = Modifier
+                            .padding(8.dp),
                     )
                 }
             }
@@ -532,7 +550,7 @@ fun Preview1(
 
 ){
     MyImageFromUri(
-        modifier = Modifier.Companion
+        modifier = Modifier
             .size(125.dp)
             .padding(
                 start = 12.dp,
