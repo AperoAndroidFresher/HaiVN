@@ -4,8 +4,11 @@ import android.Manifest
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.media.MediaMetadataRetriever
+import android.os.Build
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -55,8 +58,8 @@ import androidx.compose.ui.window.Dialog
 import com.example.vnhai.Music
 import com.example.vnhai.Playlist
 import com.example.vnhai.R
-import com.example.vnhai.myPlaylist
 
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
 fun LibraryScreen(
     modifier: Modifier = Modifier,
@@ -65,14 +68,15 @@ fun LibraryScreen(
 ) {
     val state = viewModel.uiState.collectAsState()
 
-    var isDialogVisible by remember{mutableStateOf(true)}
-    var hasPermission by remember {mutableStateOf(true)}
     val context = LocalContext.current
 
+    LaunchedEffect(Unit) {
+        viewModel.processIntent(LibraryIntent.GetPermissionState(context))
+    }
     val requestPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) {
-        hasPermission = it
+        viewModel.processIntent(LibraryIntent.GetPermissionState(context))
     }
 
     Column(modifier = modifier
@@ -83,12 +87,13 @@ fun LibraryScreen(
             .height(180.dp)
             .fillMaxWidth(),
             isLocal = state.value.isLocal,
-            onLocalClick = {viewModel.processIntent(LibraryIntent.ChangeDirection(true))},
+            onLocalClick = { viewModel.processIntent(LibraryIntent.ChangeDirection(true)) },
             onRemoteClick = {viewModel.processIntent(LibraryIntent.ChangeDirection(false))}
         )
         if(state.value.isLocal)
         {
-            if(hasPermission)
+            Log.d("main", "permission: ${state.value.hasPermission}")
+            if(state.value.hasPermission)
             {
                 LaunchedEffect(Unit) {
                     viewModel.processIntent(LibraryIntent.LoadData(context))
@@ -119,9 +124,10 @@ fun LibraryScreen(
                 MyPermissionDialog(
                     modifier = Modifier
                         .size(353.dp, 204.dp),
-                    isVisible = isDialogVisible,
-                    onAllowClick = {requestPermissionLauncher.launch(Manifest.permission.READ_MEDIA_AUDIO)},
-                    onDontAllowClick = {isDialogVisible = false},
+                    isVisible = state.value.isPermissionDialogVisible,
+                    onAllowClick = {
+                        requestPermissionLauncher.launch(Manifest.permission.READ_MEDIA_AUDIO) },
+                    onDontAllowClick = {viewModel.processIntent(LibraryIntent.ChangeVisiblePermissionDialog(false))},
                 )
             }
         }
@@ -415,6 +421,7 @@ fun MyPermissionDialog(
     onAllowClick: () -> Unit = {},
     onDontAllowClick: () -> Unit = {}
 ) {
+    Log.d("main", "$isVisible")
     if(isVisible)
     {
         Dialog(

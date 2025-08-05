@@ -1,4 +1,4 @@
-package com.example.vnhai.model.entity
+package com.example.vnhai.data.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

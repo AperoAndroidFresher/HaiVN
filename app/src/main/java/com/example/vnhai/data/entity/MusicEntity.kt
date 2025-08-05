@@ -1,22 +1,23 @@
-package com.example.vnhai.model.entity
+package com.example.vnhai.data.entity
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
-import com.example.vnhai.Music
 
 @Entity(
-    tableName = "playlist",
+    tableName = "music",
     foreignKeys = [ForeignKey(
-        entity = UserEntity::class,
+        entity = PlaylistEntity::class,
         parentColumns = arrayOf("id"),
-        childColumns = arrayOf("userId"),
+        childColumns = arrayOf("playlistId"),
         onDelete = ForeignKey.CASCADE
     )]
 )
-data class PlaylistEntity (
+data class MusicEntity (
     @PrimaryKey(autoGenerate = true) val id: Int,
+    val playlistId: Int,
+    val link: String,
     val name: String,
-    val image: Int,
-    val userId: Int,
+    val author: String,
+    val duration: String,
 )

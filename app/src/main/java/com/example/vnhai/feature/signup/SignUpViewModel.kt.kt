@@ -2,10 +2,15 @@ package com.example.vnhai.feature.signup
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.example.vnhai.User
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.example.vnhai.AppApplication
+import com.example.vnhai.data.AppRepository
 import com.example.vnhai.isValidateEmail
-import com.example.vnhai.model.dao.ManagerDao
-import com.example.vnhai.model.entity.UserEntity
+import com.example.vnhai.data.ManagerDao
+import com.example.vnhai.data.entity.UserEntity
 import com.example.vnhai.onlyLetters
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,9 +19,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import kotlin.String
+import kotlinx.coroutines.launch
 
-class SignUpViewModel(private val managerDao: ManagerDao): ViewModel()
+class SignUpViewModel(private val repository: AppRepository): ViewModel()
 {
     private val _uiState = MutableStateFlow<SignUpState>(SignUpState())
     val uiState: StateFlow<SignUpState> = _uiState.asStateFlow()
@@ -112,15 +117,17 @@ class SignUpViewModel(private val managerDao: ManagerDao): ViewModel()
             }
 
             SignUpIntent.SaveCurrentUser -> {
-                managerDao.insertUser(UserEntity(
-                    username = uiState.value.username,
-                    password = uiState.value.password,
-                    phone = "",
-                    email = uiState.value.email,
-                    name = "",
-                    universityName = "",
-                    description = "",
-                ))
+                viewModelScope.launch {
+                    repository.insertUser(UserEntity(
+                        username = uiState.value.username,
+                        password = uiState.value.password,
+                        phone = "",
+                        email = uiState.value.email,
+                        name = "",
+                        universityName = "",
+                        description = "",
+                    ))
+                }
             }
         }
     }
@@ -128,14 +135,15 @@ class SignUpViewModel(private val managerDao: ManagerDao): ViewModel()
     fun processEvent(event: SignUpEvent){
 
     }
-}
 
-class SignUpViewModelFactory(private val managerDao: ManagerDao): ViewModelProvider.Factory{
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(SignUpViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return SignUpViewModel(managerDao) as T
+    companion object {
+        val Factory: ViewModelProvider.Factory = viewModelFactory {
+            initializer {
+                val repository = (this[APPLICATION_KEY] as AppApplication).container.appRepository
+                SignUpViewModel(
+                    repository = repository
+                )
+            }
         }
-        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

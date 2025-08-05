@@ -1,8 +1,13 @@
 package com.example.vnhai.feature.library
 
+import android.Manifest
 import android.content.ContentResolver
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.provider.MediaStore
+import androidx.annotation.RequiresApi
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.vnhai.Music
@@ -22,6 +27,7 @@ class LibraryViewModel(): ViewModel() {
     private val _event = MutableSharedFlow<LibraryEvent>()
     val event: SharedFlow<LibraryEvent> = _event.asSharedFlow()
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     fun processIntent(intent: LibraryIntent){
         when(intent)
         {
@@ -68,7 +74,6 @@ class LibraryViewModel(): ViewModel() {
                 _uiState.update { currentState ->
                     currentState.copy(listMusic = listMusic)
                 }
-                println(_uiState.value.listMusic.size)
             }
 
             is LibraryIntent.AddToPlaylist -> TODO()
@@ -76,6 +81,28 @@ class LibraryViewModel(): ViewModel() {
             LibraryIntent.ChangeVisiblePlaylist -> {
                 _uiState.update { currentState ->
                     currentState.copy(isVisiblePlaylist = !uiState.value.isVisiblePlaylist)}
+            }
+
+            is LibraryIntent.GetPermissionState -> {
+                val isGranted = ContextCompat.checkSelfPermission(intent.context,Manifest.permission.READ_MEDIA_AUDIO) == PackageManager.PERMISSION_GRANTED
+                if(isGranted)
+                {
+                    _uiState.update { currentState ->
+                        currentState.copy(hasPermission = true, isPermissionDialogVisible = false)
+                    }
+                }
+                else
+                {
+                    _uiState.update { currentState ->
+                        currentState.copy(hasPermission = false, isPermissionDialogVisible = true)
+                    }
+                }
+            }
+
+            is LibraryIntent.ChangeVisiblePermissionDialog -> {
+                _uiState.update { currentState ->
+                    currentState.copy(isPermissionDialogVisible = intent.visible)
+                }
             }
         }
     }

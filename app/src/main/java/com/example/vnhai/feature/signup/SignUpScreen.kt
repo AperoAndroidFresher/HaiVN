@@ -1,5 +1,6 @@
 package com.example.vnhai.feature.signup
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -20,6 +21,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.vnhai.R
 import com.example.vnhai.User
 import com.example.vnhai.feature.signin.MyButton
@@ -29,7 +31,7 @@ import com.example.vnhai.feature.signin.MyOutLineTextField
 fun SignUpScreen(
     modifier: Modifier = Modifier,
     onSignUpClick: () -> Unit = {},
-    viewModel: SignUpViewModel
+    viewModel: SignUpViewModel = viewModel(factory = SignUpViewModel.Factory)
 ) {
 
     val state = viewModel.uiState.collectAsState()
@@ -155,6 +157,7 @@ fun SignUpScreen(
                     if(state.value.userError && state.value.passwordError && state.value.confirmError && state.value.emailError)
                     {
                         viewModel.processIntent(SignUpIntent.SaveCurrentUser)
+                        Log.d("main", "ahihi")
                         onSignUpClick()
                     }
                 })

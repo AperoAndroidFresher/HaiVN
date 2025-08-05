@@ -1,10 +1,12 @@
 package com.example.vnhai
 
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,6 +24,7 @@ import androidx.navigation3.ui.NavDisplay
 import com.example.vnhai.feature.home.Home
 import com.example.vnhai.feature.library.LibraryScreen
 import com.example.vnhai.feature.library.LibraryViewModel
+import com.example.vnhai.feature.myplaylist.MyPlaylist
 import com.example.vnhai.feature.profile.Profile
 import com.example.vnhai.feature.profile.ProfileViewModel
 import com.example.vnhai.feature.signin.LoadingScreen
@@ -30,8 +33,6 @@ import com.example.vnhai.feature.signin.SignInViewModel
 import com.example.vnhai.feature.signup.SignUpScreen
 import com.example.vnhai.feature.signup.SignUpViewModel
 import com.example.vnhai.ui.theme.VNHaiTheme
-import com.example.vnhai.feature.myplaylist.MyPlaylist
-import com.example.vnhai.feature.signup.SignUpViewModelFactory
 import kotlinx.coroutines.delay
 
 sealed interface AppScreen{
@@ -46,14 +47,11 @@ sealed interface AppScreen{
 
 class MainActivity : ComponentActivity() {
     private val signInViewModel: SignInViewModel by viewModels()
-    private val signUpViewModel: SignUpViewModel by viewModels(){
-        SignUpViewModelFactory(
-            (application as VNHaiApplication).database.managerDao()
-        )
-    }
+    private val signUpViewModel: SignUpViewModel by viewModels{ SignUpViewModel.Factory }
     private val profileViewModel: ProfileViewModel by viewModels()
     private val libraryViewModel: LibraryViewModel by viewModels()
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -80,6 +78,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
 fun App(
     modifier: Modifier = Modifier,
@@ -127,7 +126,7 @@ fun App(
 
                             AppScreen.SignUp -> NavEntry(key){
                                 SignUpScreen(
-                                    viewModel = signUpViewModel,
+//                                    viewModel = signUpViewModel,
                                     onSignUpClick = {backStack.add(AppScreen.SignIn)},
                                 )
                             }
