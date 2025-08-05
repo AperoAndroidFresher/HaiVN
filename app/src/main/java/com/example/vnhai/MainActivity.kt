@@ -44,7 +44,6 @@ sealed interface AppScreen{
     data object MyPlaylist: AppScreen
 }
 
-
 class MainActivity : ComponentActivity() {
     private val signInViewModel: SignInViewModel by viewModels()
     private val signUpViewModel: SignUpViewModel by viewModels{ SignUpViewModel.Factory }
