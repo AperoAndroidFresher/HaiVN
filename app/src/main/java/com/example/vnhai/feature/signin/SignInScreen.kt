@@ -21,7 +21,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,8 +34,8 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.vnhai.R
-import com.example.vnhai.listUser
 
 @Composable
 fun LoadingScreen(
@@ -74,17 +73,11 @@ fun LoadingScreen(
 @Composable
 fun SignInScreen(
     modifier: Modifier = Modifier,
-    //currentUser: User = User("", ""),
     onSignUpTextClick: () -> Unit = {},
     onSignInButtonClick: () -> Unit = {},
-    viewModel: SignInViewModel,
+    viewModel: SignInViewModel = viewModel(factory = SignInViewModel.Factory),
 )
 {
-    LaunchedEffect(listUser) {
-        viewModel.processIntent(SignInIntent.EnterUserName(listUser.last().username))
-        viewModel.processIntent(SignInIntent.EnterPassword(listUser.last().password))
-    }
-
     val state = viewModel.uiState.collectAsState()
 
     Column(
@@ -156,7 +149,7 @@ fun SignInScreen(
             }
         )
 
-        MyButton(
+        MySignInButton(
             modifier = modifier
                 .fillMaxWidth()
                 .padding(top = 20.dp),
@@ -295,7 +288,7 @@ fun MyCheckBox(
 }
 
 @Composable
-fun MyButton(
+fun MySignInButton(
     modifier: Modifier = Modifier,
     text: String = "",
     onClick: () -> Unit = {}

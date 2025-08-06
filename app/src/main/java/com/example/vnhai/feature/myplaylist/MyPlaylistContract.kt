@@ -1,13 +1,13 @@
 package com.example.vnhai.feature.myplaylist
 
-import android.content.ContentResolver
-import com.example.vnhai.Music
-import com.example.vnhai.Playlist
+import com.example.vnhai.data.local.entity.MusicEntity
+import com.example.vnhai.data.local.entity.PlaylistEntity
+
 
 data class MyPlaylistState(
     val columnLayout: Boolean = true,
-    val listMusic: List<Music> = listOf<Music>(),
-    val listPlaylist: List<Playlist> = listOf<Playlist>()
+    val listMusic: List<MusicEntity> = listOf<MusicEntity>(),
+    val listPlaylist: List<PlaylistEntity> = listOf<PlaylistEntity>()
 )
 
 sealed interface MyPlaylistIntent{

@@ -46,10 +46,6 @@ sealed interface AppScreen{
 
 
 class MainActivity : ComponentActivity() {
-    private val signInViewModel: SignInViewModel by viewModels()
-    private val signUpViewModel: SignUpViewModel by viewModels{ SignUpViewModel.Factory }
-    private val profileViewModel: ProfileViewModel by viewModels()
-    private val libraryViewModel: LibraryViewModel by viewModels()
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -63,11 +59,6 @@ class MainActivity : ComponentActivity() {
                 App(
                     modifier = Modifier
                         .fillMaxSize(),
-                    signInViewModel = signInViewModel,
-                    signUpViewModel = signUpViewModel,
-                    profileViewModel = profileViewModel,
-                    libraryViewModel = libraryViewModel,
-
                     darkTheme = darkTheme,
                     onThemeIconClick = {
                         darkTheme = !darkTheme
@@ -82,10 +73,6 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun App(
     modifier: Modifier = Modifier,
-    signInViewModel: SignInViewModel,
-    signUpViewModel: SignUpViewModel,
-    profileViewModel: ProfileViewModel,
-    libraryViewModel: LibraryViewModel,
     darkTheme: Boolean,
     onThemeIconClick: ()->Unit = {}
 ){
@@ -114,7 +101,6 @@ fun App(
                         when(key){
                             AppScreen.SignIn -> NavEntry(key){
                                 SignInScreen(
-                                    viewModel = signInViewModel,
                                     onSignInButtonClick = {
                                         backStack.add(AppScreen.Home)
                                         backStack.subList(0, backStack.size - 1).clear() },
@@ -126,7 +112,6 @@ fun App(
 
                             AppScreen.SignUp -> NavEntry(key){
                                 SignUpScreen(
-//                                    viewModel = signUpViewModel,
                                     onSignUpClick = {backStack.add(AppScreen.SignIn)},
                                 )
                             }
@@ -144,7 +129,6 @@ fun App(
                                 Profile(
                                     darkTheme = darkTheme,
                                     onThemeIconClick = onThemeIconClick,
-                                    viewModel = profileViewModel
                                 )
                             }
 
@@ -154,9 +138,8 @@ fun App(
 
                             AppScreen.Library -> NavEntry(key){
                                 LibraryScreen(
-                                    viewModel = libraryViewModel,
                                     navigationToPlaylist = {backStack.add(AppScreen.MyPlaylist)}
-                                    )
+                                )
                             }
                         }
                     }

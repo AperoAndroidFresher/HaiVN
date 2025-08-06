@@ -1,5 +1,6 @@
 package com.example.vnhai.feature.signup
 
+import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
@@ -9,8 +10,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.vnhai.AppApplication
 import com.example.vnhai.data.AppRepository
 import com.example.vnhai.isValidateEmail
-import com.example.vnhai.data.ManagerDao
-import com.example.vnhai.data.entity.UserEntity
+import com.example.vnhai.data.local.entity.UserEntity
 import com.example.vnhai.onlyLetters
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -57,20 +57,20 @@ class SignUpViewModel(private val repository: AppRepository): ViewModel()
                 }
             }
 
-            SignUpIntent.SignUp -> {
-                if (!uiState.value.username.onlyLetters()) {
+            is SignUpIntent.SignUp -> {
+                if (!uiState.value.username.onlyLetters() || uiState.value.username.isEmpty()) {
                     _uiState.update { currentState ->
                         currentState.copy(userError = true)
                     }
                 }
 
-                if (!uiState.value.password.onlyLetters()) {
+                if (!uiState.value.password.onlyLetters() || uiState.value.password.isEmpty()) {
                     _uiState.update { currentState ->
                         currentState.copy(passwordError = true)
                     }
                 }
 
-                if (!uiState.value.confirm.onlyLetters() || uiState.value.confirm != uiState.value.password) {
+                if (!uiState.value.confirm.onlyLetters() || uiState.value.confirm != uiState.value.password || uiState.value.confirm.isEmpty()) {
                     _uiState.update { currentState ->
                         currentState.copy(confirmError = true)
                     }
@@ -79,6 +79,29 @@ class SignUpViewModel(private val repository: AppRepository): ViewModel()
                 if (!uiState.value.email.isValidateEmail()) {
                     _uiState.update { currentState ->
                         currentState.copy(emailError = true)
+                    }
+                }
+
+                if(!(uiState.value.userError || uiState.value.passwordError || uiState.value.confirmError || uiState.value.emailError))
+                {
+                    viewModelScope.launch {
+                        if(repository.checkUserName(uiState.value.username.lowercase()) == 0)
+                        {
+                            repository.insertUser(UserEntity(
+                                username = uiState.value.username,
+                                password = uiState.value.password,
+                                phone = "",
+                                email = uiState.value.email,
+                                name = "",
+                                universityName = "",
+                                description = "",
+                            ))
+                            intent.onClick
+                        }
+                        else
+                        {
+                            Toast.makeText(intent.context,"Ten dang nhap da ton tai", Toast.LENGTH_SHORT).show()
+                        }
                     }
                 }
             }
@@ -116,24 +139,15 @@ class SignUpViewModel(private val repository: AppRepository): ViewModel()
                 }
             }
 
-            SignUpIntent.SaveCurrentUser -> {
-                viewModelScope.launch {
-                    repository.insertUser(UserEntity(
-                        username = uiState.value.username,
-                        password = uiState.value.password,
-                        phone = "",
-                        email = uiState.value.email,
-                        name = "",
-                        universityName = "",
-                        description = "",
-                    ))
-                }
-            }
         }
     }
 
     fun processEvent(event: SignUpEvent){
-
+        when(event){
+            is SignUpEvent.SignUpError -> {
+                Toast.makeText(event.context,"Please try again", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     companion object {

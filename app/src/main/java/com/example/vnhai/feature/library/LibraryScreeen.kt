@@ -55,15 +55,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import com.example.vnhai.Music
-import com.example.vnhai.Playlist
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.vnhai.R
+import com.example.vnhai.data.local.entity.MusicEntity
+import com.example.vnhai.data.local.entity.PlaylistEntity
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
 fun LibraryScreen(
     modifier: Modifier = Modifier,
-    viewModel: LibraryViewModel = LibraryViewModel(),
+    viewModel: LibraryViewModel = viewModel(factory = LibraryViewModel.Factory),
     navigationToPlaylist: () -> Unit,
 ) {
     val state = viewModel.uiState.collectAsState()
@@ -140,8 +141,8 @@ fun LibraryScreen(
 @Composable
 fun LocalScreen(
     modifier: Modifier = Modifier,
-    listMusic: List<Music> = listOf(),
-    onAddToPlaylistClick: (Music) -> Unit = {}
+    listMusic: List<MusicEntity> = listOf(),
+    onAddToPlaylistClick: (MusicEntity) -> Unit = {}
 )
 {
     Box(modifier = modifier)
@@ -273,13 +274,9 @@ fun HeadLibrary(
 @Composable
 fun ColumnMusicLayout(
     modifier: Modifier = Modifier,
-    music:Music = Music(
-        "C:/Users/Admin/HaiVN/app/src/main/res/drawable/music1.webp",
-        "grainy days",
-        "moody",
-        "04:30"),
-    onAddToPlaylistClick: (Music) -> Unit = {},
-    onShareClick: (Music) -> Unit = {}
+    music: MusicEntity,
+    onAddToPlaylistClick: (MusicEntity) -> Unit = {},
+    onShareClick: (MusicEntity) -> Unit = {}
 ){
     Row(
         modifier = modifier
@@ -323,9 +320,9 @@ fun ColumnMusicLayout(
 @Composable
 fun KebabMenu(
     modifier: Modifier = Modifier,
-    music: Music,
-    onAddToPlaylistClick: (Music)->Unit = {},
-    onShareClick: (Music)->Unit = {}
+    music: MusicEntity,
+    onAddToPlaylistClick: (MusicEntity)->Unit = {},
+    onShareClick: (MusicEntity)->Unit = {}
 ) {
     var expanded by remember { mutableStateOf(false) }
     Box(
@@ -497,10 +494,10 @@ fun MyPermissionDialog(
 fun ChoosePlaylistDialog(
     modifier: Modifier = Modifier,
     isVisible: Boolean = false,
-    myPlaylist: List<Playlist> = listOf<Playlist>(),
+    myPlaylist: List<PlaylistEntity> = listOf<PlaylistEntity>(),
     onDismissRequest: () -> Unit = {},
     onAddPlaylistClick: () -> Unit = {},
-    onPlaylistClick: (Playlist) -> Unit = {},
+    onPlaylistClick: (PlaylistEntity) -> Unit = {},
 ){
     if(isVisible)
     {
@@ -574,7 +571,7 @@ fun ChoosePlaylistDialog(
 @Composable
 fun Playlist(
     modifier: Modifier = Modifier,
-    playlist: Playlist
+    playlist: PlaylistEntity
 ){
     Row (
         modifier = modifier
@@ -604,7 +601,7 @@ fun Playlist(
                         color = Color.White
                     )
                     Text(
-                        text = "${playlist.listMusic.size} songs",
+                        text = " songs",
                         color = Color.White
                     )
                 }

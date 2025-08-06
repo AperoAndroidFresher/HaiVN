@@ -1,14 +1,11 @@
 package com.example.vnhai.data
 
-import androidx.room.Delete
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
-import androidx.room.Query
-import androidx.room.Update
-import com.example.vnhai.data.entity.MusicEntity
-import com.example.vnhai.data.entity.PlaylistEntity
-import com.example.vnhai.data.entity.UserEntity
+import com.example.vnhai.data.local.entity.MusicEntity
+import com.example.vnhai.data.local.entity.PlaylistEntity
+import com.example.vnhai.data.local.entity.UserEntity
+import com.example.vnhai.data.remote.model.MusicFRemote
 import kotlinx.coroutines.flow.Flow
+import retrofit2.Call
 
 interface AppRepository {
     fun getListUser(): Flow<List<UserEntity>>
@@ -21,7 +18,9 @@ interface AppRepository {
 
     fun getPlaylistByUser(userId: Int): Flow<List<PlaylistEntity>>
 
-    suspend fun insertUser(user: UserEntity): Long
+    suspend fun checkUserName(userName: String): Int
+
+    suspend fun insertUser(user: UserEntity)
 
     suspend fun insertMusic(vararg music: MusicEntity)
 
@@ -32,4 +31,8 @@ interface AppRepository {
     suspend fun deletePlaylist(playlist: PlaylistEntity)
 
     suspend fun deleteMusic(music: MusicEntity)
+}
+
+interface RemoteAppRepository {
+    suspend fun getMusicFRemote(): Call<List<MusicFRemote>>
 }

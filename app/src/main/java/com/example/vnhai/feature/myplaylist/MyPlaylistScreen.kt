@@ -39,8 +39,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.vnhai.Playlist
 import com.example.vnhai.R
+import com.example.vnhai.data.local.entity.PlaylistEntity
 
 data class Music(
     val image: Int,
@@ -142,8 +142,8 @@ fun MyPlaylist(
 @Composable
 fun MyPlaylistScreen(
     modifier: Modifier = Modifier,
-    myPlaylist: List<Playlist> = listOf(),
-    onPlaylistClick: (Playlist)->Unit = {}
+    myPlaylist: List<PlaylistEntity> = listOf(),
+    onPlaylistClick: (PlaylistEntity)->Unit = {}
 ){
     LazyColumn (modifier = modifier){
         items(myPlaylist) { playlist ->
@@ -162,7 +162,7 @@ fun MyPlaylistScreen(
 @Composable
 fun Playlist(
     modifier: Modifier = Modifier,
-    playlist: Playlist
+    playlist: PlaylistEntity
 ){
     Row (
         modifier = modifier
@@ -192,7 +192,7 @@ fun Playlist(
                         color = Color.White
                     )
                     Text(
-                        text = "${playlist.listMusic.size} songs",
+                        text = " songs",
                         color = Color.White
                     )
                 }

@@ -10,8 +10,14 @@ import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.example.vnhai.Music
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.example.vnhai.AppApplication
 import com.example.vnhai.convertFromMilliSecondToMinuteAndSecond
+import com.example.vnhai.data.RemoteAppRepository
+import com.example.vnhai.data.local.entity.MusicEntity
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -19,8 +25,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
-class LibraryViewModel(): ViewModel() {
+class LibraryViewModel(private val remoteAppRepository: RemoteAppRepository): ViewModel() {
     private val _uiState = MutableStateFlow(LibraryState())
     val uiState: StateFlow<LibraryState> = _uiState.asStateFlow()
 
@@ -38,7 +45,7 @@ class LibraryViewModel(): ViewModel() {
             }
 
             is LibraryIntent.LoadData -> {
-                val listMusic = mutableListOf<Music>()
+                val listMusic = mutableListOf<MusicEntity>()
                 if(uiState.value.isLocal)
                 {
                     val contentResolver: ContentResolver = intent.context.contentResolver
@@ -67,7 +74,7 @@ class LibraryViewModel(): ViewModel() {
                             val data = it.getString(dataColumn)
                             val duration = convertFromMilliSecondToMinuteAndSecond(it.getString(durationColumn))
 
-                            listMusic.add(Music(data, title, artist, duration))
+                            listMusic.add(MusicEntity(link = data, name = title,author = artist, duration = duration))
                         }
                     }
                 }
@@ -104,21 +111,24 @@ class LibraryViewModel(): ViewModel() {
                     currentState.copy(isPermissionDialogVisible = intent.visible)
                 }
             }
+
+            LibraryIntent.GetRemoteListMusic -> TODO()
         }
     }
 
     fun processEvent(event: LibraryEvent){
-
-    }
-}
-
-class LibraryViewModelFactory(): ViewModelProvider.Factory
-{
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(LibraryViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return LibraryViewModel() as T
+        viewModelScope.launch {
+            remoteAppRepository.getMusicFRemote()
         }
-        throw IllegalArgumentException("Unknown ViewModel class")
+    }
+
+    companion object{
+        val Factory: ViewModelProvider.Factory = viewModelFactory{
+            initializer {
+                val appRemoteRepository = (this[APPLICATION_KEY] as AppApplication).container.remoteAppRepository
+                LibraryViewModel(appRemoteRepository)
+            }
+        }
     }
 }
+

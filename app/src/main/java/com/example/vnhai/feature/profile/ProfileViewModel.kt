@@ -1,9 +1,12 @@
 package com.example.vnhai.feature.profile
 
 import androidx.lifecycle.ViewModel
-import com.example.vnhai.feature.signup.SignUpEvent
-import com.example.vnhai.feature.signup.SignUpIntent
-import com.example.vnhai.feature.signup.SignUpState
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.example.vnhai.AppApplication
+import com.example.vnhai.data.AppRepository
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -12,7 +15,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
-class ProfileViewModel: ViewModel(){
+class ProfileViewModel(private val repository: AppRepository): ViewModel(){
     private val _uiState = MutableStateFlow<ProfileState>(ProfileState())
     val uiState: StateFlow<ProfileState> = _uiState.asStateFlow()
 
@@ -71,5 +74,16 @@ class ProfileViewModel: ViewModel(){
     }
     fun processEvent(event: ProfileEvent){
 
+    }
+
+    companion object{
+        val Factory: ViewModelProvider.Factory = viewModelFactory {
+            initializer {
+                val repository = (this[APPLICATION_KEY] as AppApplication).container.appRepository
+                ProfileViewModel(
+                    repository = repository
+                )
+            }
+        }
     }
 }

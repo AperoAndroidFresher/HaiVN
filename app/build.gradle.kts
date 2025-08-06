@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("com.google.devtools.ksp")
+
 }
 
 android {
@@ -41,12 +42,21 @@ android {
 }
 
 dependencies {
+    // Retrofit with Moshi Converter
+    implementation (libs.converter.moshi)
+    // Moshi
+    implementation (libs.moshi.kotlin)
+
+    implementation(libs.okhttp)
     //Room
     ksp(libs.androidx.room.compiler)
     implementation (libs.androidx.room.runtime)
     implementation (libs.androidx.room.ktx)
     implementation(libs.accompanist.permissions.v0373)
+
+    //Coil
     implementation(libs.coil.kt.coil.compose)
+    //Navigation
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -57,8 +67,12 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.adaptive.android)
+
+    //Navigation3
     implementation(libs.androidx.navigation.runtime.android)
     implementation(libs.androidx.navigation3.ui.android)
+
+
     implementation(libs.volley)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

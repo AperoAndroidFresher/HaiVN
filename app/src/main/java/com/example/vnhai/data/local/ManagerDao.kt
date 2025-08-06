@@ -1,14 +1,13 @@
-package com.example.vnhai.data
+package com.example.vnhai.data.local
 
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
-import com.example.vnhai.data.entity.MusicEntity
-import com.example.vnhai.data.entity.PlaylistEntity
-import com.example.vnhai.data.entity.UserEntity
+import com.example.vnhai.data.local.entity.MusicEntity
+import com.example.vnhai.data.local.entity.PlaylistEntity
+import com.example.vnhai.data.local.entity.UserEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -28,8 +27,11 @@ interface ManagerDao {
     @Query("SELECT * FROM playlist WHERE userId = :userId" )
     fun getPlaylistByUser(userId: Int): Flow<List<PlaylistEntity>>
 
-    @Insert(entity = UserEntity::class, onConflict = OnConflictStrategy.Companion.IGNORE)
-    suspend fun insertUser(user: UserEntity): Long
+    @Query("SELECT COUNT (*) FROM user WHERE username = :userName")
+    suspend fun checkUserName(userName: String): Int
+
+    @Insert
+    suspend fun insertUser(user: UserEntity)
 
     @Insert
     suspend fun insertMusic(vararg music: MusicEntity)

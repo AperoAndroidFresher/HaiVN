@@ -51,10 +51,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.vnhai.R
-import com.example.vnhai.feature.signup.SignUpViewModel
 import com.example.vnhai.onlyLetters
 
 @Composable
@@ -62,7 +62,7 @@ fun Profile(
     modifier: Modifier = Modifier,
     darkTheme: Boolean,
     onThemeIconClick: () -> Unit = {},
-    viewModel: ProfileViewModel,
+    viewModel: ProfileViewModel = viewModel(factory = ProfileViewModel.Factory),
 ) {
     Screen(darkTheme = darkTheme,
         onThemeIconClick = onThemeIconClick,

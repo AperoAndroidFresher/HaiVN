@@ -1,5 +1,7 @@
 package com.example.vnhai.feature.signup
 
+import android.content.Context
+
 data class SignUpState(
     val username: String = "",
     val password: String = "",
@@ -26,13 +28,13 @@ sealed interface SignUpIntent{
     data class ChangeConfirmError(val confirmError: Boolean): SignUpIntent
     data class ChangeEmailError(val emailError: Boolean): SignUpIntent
 
-    object SaveCurrentUser: SignUpIntent
+    data class SignUp(val context: Context, val onClick: () -> Unit): SignUpIntent
+
     object VisiblePassword: SignUpIntent
     object VisibleConfirm: SignUpIntent
 
-    object SignUp: SignUpIntent
 }
 
 sealed interface SignUpEvent{
-
+    data class SignUpError(val context: Context): SignUpEvent
 }

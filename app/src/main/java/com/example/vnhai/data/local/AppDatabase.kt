@@ -1,13 +1,12 @@
-package com.example.vnhai.data
+package com.example.vnhai.data.local
 
 import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.example.vnhai.data.ManagerDao
-import com.example.vnhai.data.entity.MusicEntity
-import com.example.vnhai.data.entity.PlaylistEntity
-import com.example.vnhai.data.entity.UserEntity
+import com.example.vnhai.data.local.entity.MusicEntity
+import com.example.vnhai.data.local.entity.PlaylistEntity
+import com.example.vnhai.data.local.entity.UserEntity
 
 @Database(entities = [UserEntity::class, MusicEntity::class, PlaylistEntity::class], version = 1, exportSchema = false)
 abstract class AppDatabase : RoomDatabase(){

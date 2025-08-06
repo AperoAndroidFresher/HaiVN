@@ -8,23 +8,26 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.vnhai.R
-import com.example.vnhai.User
-import com.example.vnhai.feature.signin.MyButton
 import com.example.vnhai.feature.signin.MyOutLineTextField
 
 @Composable
@@ -34,6 +37,7 @@ fun SignUpScreen(
     viewModel: SignUpViewModel = viewModel(factory = SignUpViewModel.Factory)
 ) {
 
+    val context = LocalContext.current
     val state = viewModel.uiState.collectAsState()
 
     Column(
@@ -147,20 +151,42 @@ fun SignUpScreen(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.Companion.Bottom
         ) {
-            MyButton(
+            MySignUpButton(
                 modifier = modifier
                     .fillMaxWidth()
                     .padding(top = 20.dp),
                 text = "Sign Up",
                 onClick = {
-                    viewModel.processIntent(SignUpIntent.SignUp)
-                    if(state.value.userError && state.value.passwordError && state.value.confirmError && state.value.emailError)
-                    {
-                        viewModel.processIntent(SignUpIntent.SaveCurrentUser)
-                        Log.d("main", "ahihi")
-                        onSignUpClick()
-                    }
+                    viewModel.processIntent(SignUpIntent.SignUp(context = context, onClick = onSignUpClick))
                 })
         }
+    }
+}
+
+@Composable
+fun MySignUpButton(
+    modifier: Modifier = Modifier,
+    text: String = "",
+    onClick: () -> Unit = {}
+) {
+    Button(
+        modifier = modifier
+            .height(59.dp)
+            .fillMaxWidth()
+            .background(
+                color = Color(0xff06A0B5),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(50.dp)
+            ),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color(0xff06A0B5)
+        ),
+        onClick = onClick
+    ) {
+        Text(
+            textAlign = TextAlign.Companion.Center,
+            text = text,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Companion.Bold
+        )
     }
 }
