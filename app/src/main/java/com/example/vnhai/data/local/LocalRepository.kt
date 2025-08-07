@@ -19,6 +19,8 @@ class LocalRepository(private val managerDao: ManagerDao): AppRepository {
 
     override suspend fun checkUserName(userName: String): Int = managerDao.checkUserName(userName)
 
+    override suspend fun checkUserNamePassword(userName: String, password: String): Int = managerDao.checkUsernamePassword(userName, password)
+
     override suspend fun insertUser(user: UserEntity)  = managerDao.insertUser(user)
 
     override suspend fun insertMusic(vararg music: MusicEntity)  = managerDao.insertMusic(*music)

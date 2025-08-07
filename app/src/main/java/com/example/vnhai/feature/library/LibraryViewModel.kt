@@ -112,14 +112,26 @@ class LibraryViewModel(private val remoteAppRepository: RemoteAppRepository): Vi
                 }
             }
 
-            LibraryIntent.GetRemoteListMusic -> TODO()
+            LibraryIntent.GetRemoteListMusic -> {
+                viewModelScope.launch {
+                    val response = remoteAppRepository.getMusicFRemote()
+                    when{
+                        response.isSuccessful -> {
+                            val music = response.body()
+                        }
+                        response.code() == 400 -> {}
+                        response.code() == 401 -> {}
+                        response.code() == 403 -> {}
+                        response.code() == 404 -> {}
+                        response.code() == 500 -> {}
+                    }
+                }
+            }
         }
     }
 
     fun processEvent(event: LibraryEvent){
-        viewModelScope.launch {
-            remoteAppRepository.getMusicFRemote()
-        }
+
     }
 
     companion object{

@@ -1,5 +1,6 @@
 package com.example.vnhai.feature.signin
 
+import android.content.Context
 import com.example.vnhai.data.local.entity.UserEntity
 
 data class SignInState(
@@ -14,6 +15,9 @@ data class SignInState(
 sealed interface SignInIntent{
     data class EnterUserName(val username: String): SignInIntent
     data class EnterPassword(val password: String): SignInIntent
+    data class LoadData(val context: Context): SignInIntent
+    data class SignIn(val context: Context, val onClick: () -> Unit): SignInIntent
+
     object CheckRemember: SignInIntent
     object VisiblePassword: SignInIntent
 }

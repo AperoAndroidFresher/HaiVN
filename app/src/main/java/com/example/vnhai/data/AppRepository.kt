@@ -5,7 +5,7 @@ import com.example.vnhai.data.local.entity.PlaylistEntity
 import com.example.vnhai.data.local.entity.UserEntity
 import com.example.vnhai.data.remote.model.MusicFRemote
 import kotlinx.coroutines.flow.Flow
-import retrofit2.Call
+import retrofit2.Response
 
 interface AppRepository {
     fun getListUser(): Flow<List<UserEntity>>
@@ -19,6 +19,8 @@ interface AppRepository {
     fun getPlaylistByUser(userId: Int): Flow<List<PlaylistEntity>>
 
     suspend fun checkUserName(userName: String): Int
+
+    suspend fun checkUserNamePassword(userName: String, password: String): Int
 
     suspend fun insertUser(user: UserEntity)
 
@@ -34,5 +36,5 @@ interface AppRepository {
 }
 
 interface RemoteAppRepository {
-    suspend fun getMusicFRemote(): Call<List<MusicFRemote>>
+    suspend fun getMusicFRemote(): Response<List<MusicFRemote>>
 }

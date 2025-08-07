@@ -30,6 +30,9 @@ interface ManagerDao {
     @Query("SELECT COUNT (*) FROM user WHERE username = :userName")
     suspend fun checkUserName(userName: String): Int
 
+    @Query("SELECT COUNT (*) FROM user WHERE username = :userName AND password = :password")
+    suspend fun checkUsernamePassword(userName: String, password: String): Int
+
     @Insert
     suspend fun insertUser(user: UserEntity)
 

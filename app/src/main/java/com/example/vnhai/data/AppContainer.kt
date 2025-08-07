@@ -25,7 +25,7 @@ class AppDataContainer(private val context: Context) : AppContainer {
     }
 
     //For remote
-    private val baseUrl = "https://static.apero.vn/techtrek/Remote_audio.json"
+    private val baseUrl = "https://static.apero.vn"
     private val requestTimeout = 30L
 
     private val moshi = Moshi.Builder()

@@ -71,6 +71,7 @@ fun LibraryScreen(
 
     val context = LocalContext.current
 
+    //Kiem tra va yeu cau quyen truy cap khi lan dau chuyen vao local.
     LaunchedEffect(Unit) {
         viewModel.processIntent(LibraryIntent.GetPermissionState(context))
     }
@@ -89,11 +90,13 @@ fun LibraryScreen(
             .fillMaxWidth(),
             isLocal = state.value.isLocal,
             onLocalClick = { viewModel.processIntent(LibraryIntent.ChangeDirection(true)) },
-            onRemoteClick = {viewModel.processIntent(LibraryIntent.ChangeDirection(false))}
+            onRemoteClick = {
+                viewModel.processIntent(LibraryIntent.ChangeDirection(false))
+                viewModel.processIntent(LibraryIntent.GetRemoteListMusic)
+            }
         )
         if(state.value.isLocal)
         {
-            Log.d("main", "permission: ${state.value.hasPermission}")
             if(state.value.hasPermission)
             {
                 LaunchedEffect(Unit) {
@@ -127,11 +130,13 @@ fun LibraryScreen(
                         .size(353.dp, 204.dp),
                     isVisible = state.value.isPermissionDialogVisible,
                     onAllowClick = {
-                        requestPermissionLauncher.launch(Manifest.permission.READ_MEDIA_AUDIO) },
+                        requestPermissionLauncher.launch(Manifest.permission.READ_MEDIA_AUDIO)
+                        requestPermissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)},
                     onDontAllowClick = {viewModel.processIntent(LibraryIntent.ChangeVisiblePermissionDialog(false))},
                 )
             }
         }
+
         else{
             RemoteScreen()
         }
@@ -176,96 +181,65 @@ fun HeadLibrary(
     onRemoteClick:()->Unit = {}
 ){
     Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
             .padding(top = 50.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            modifier = Modifier
-                .height(30.dp),
             text = "Library",
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.White
+            color = Color.White,
+            modifier = Modifier
+                .height(30.dp),
         )
         Row(
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .height(70.dp)
                 .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
         ){
-            if(isLocal)
-            {
-                Button(
-                    modifier = Modifier
-                        .size(140.dp, 50.dp)
-                        .padding(5.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF00C2CB)
-                    ),
-                    onClick = onLocalClick
-                ) {
-                    Text(
-                        text = "Local",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
-                    )
-                }
-
-                Button(
-                    modifier = Modifier
-                        .size(140.dp, 50.dp)
-                        .padding(5.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF1E1E1E)
-                    ),
-                    onClick = onRemoteClick
-                ) {
-                    Text(
-                        text = "Remote",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
-                    )
-                }
+            Button(
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if(isLocal) {
+                        Color(0xFF00C2CB)
+                    } else {
+                        Color(0xFF1E1E1E)
+                    }
+                ),
+                onClick = onLocalClick,
+                modifier = Modifier
+                    .size(140.dp, 50.dp)
+                    .padding(5.dp),
+            ) {
+                Text(
+                    text = "Local",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
+                )
             }
-            else
-            {
-                Button(
-                    modifier = Modifier
-                        .size(140.dp, 50.dp)
-                        .padding(5.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF1E1E1E)
-                    ),
-                    onClick = onLocalClick
-                ) {
-                    Text(
-                        text = "Local",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
-                    )
-                }
 
-                Button(
-                    modifier = Modifier
-                        .size(140.dp, 50.dp)
-                        .padding(5.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF00C2CB)
-                    ),
-                    onClick = onRemoteClick
-                ) {
-                    Text(
-                        text = "Remote",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
-                    )
-                }
+            Button(
+                modifier = Modifier
+                    .size(140.dp, 50.dp)
+                    .padding(5.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if(!isLocal) {
+                        Color(0xFF00C2CB)
+                    } else {
+                        Color(0xFF1E1E1E)
+                    }
+                ),
+                onClick = onRemoteClick
+            ) {
+                Text(
+                    text = "Remote",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
+                )
             }
         }
     }
@@ -273,16 +247,16 @@ fun HeadLibrary(
 
 @Composable
 fun ColumnMusicLayout(
-    modifier: Modifier = Modifier,
     music: MusicEntity,
+    modifier: Modifier = Modifier,
     onAddToPlaylistClick: (MusicEntity) -> Unit = {},
     onShareClick: (MusicEntity) -> Unit = {}
 ){
     Row(
-        modifier = modifier
-            .padding(8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = modifier
+            .padding(8.dp),
     ) {
         DrawImageFromPath(mp3FilePath = music.link)
         Column(
@@ -307,20 +281,21 @@ fun ColumnMusicLayout(
             color = Color.White
         )
         Spacer(modifier = Modifier.width(10.dp))
+
         KebabMenu(
-            modifier = Modifier
-                .size(25.dp),
             music = music,
             onAddToPlaylistClick = onAddToPlaylistClick,
-            onShareClick = onShareClick
+            onShareClick = onShareClick,
+            modifier = Modifier
+                .size(25.dp),
         )
     }
 }
 
 @Composable
 fun KebabMenu(
-    modifier: Modifier = Modifier,
     music: MusicEntity,
+    modifier: Modifier = Modifier,
     onAddToPlaylistClick: (MusicEntity)->Unit = {},
     onShareClick: (MusicEntity)->Unit = {}
 ) {
@@ -330,20 +305,20 @@ fun KebabMenu(
             .padding(4.dp)
     ) {
         IconButton(
+            onClick = { expanded = !expanded },
             modifier = modifier
                 .size(24.dp, 24.dp),
-            onClick = { expanded = !expanded }
         ) {
             Icon(
+                painter = painterResource(R.drawable.kebab_menu),
+                contentDescription = "Delete Icon",
+                tint = Color.White,
                 modifier = modifier
                     .size(20.dp, 20.dp)
                     .background(
                         color = Color.Black.copy(alpha = 0.7f),
                         shape = CircleShape
                     ),
-                painter = painterResource(R.drawable.kebab_menu),
-                contentDescription = "Delete Icon",
-                tint = Color.White
             )
         }
         DropdownMenu(
@@ -418,7 +393,6 @@ fun MyPermissionDialog(
     onAllowClick: () -> Unit = {},
     onDontAllowClick: () -> Unit = {}
 ) {
-    Log.d("main", "$isVisible")
     if(isVisible)
     {
         Dialog(
@@ -555,7 +529,7 @@ fun ChoosePlaylistDialog(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clickable(
-                                            onClick = {onPlaylistClick(playlist)}
+                                            onClick = { onPlaylistClick(playlist) }
                                         ),
                                     playlist = playlist
                                 )
@@ -574,15 +548,15 @@ fun Playlist(
     playlist: PlaylistEntity
 ){
     Row (
-        modifier = modifier
-            .padding(8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = modifier
+            .padding(8.dp),
     ){
         Row (
-            modifier = modifier,
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = modifier,
         ){
             Row {
                 Image(

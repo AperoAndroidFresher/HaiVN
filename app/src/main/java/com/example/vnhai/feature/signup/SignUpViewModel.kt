@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.vnhai.AppApplication
+import com.example.vnhai.SharedPreferences
 import com.example.vnhai.data.AppRepository
 import com.example.vnhai.isValidateEmail
 import com.example.vnhai.data.local.entity.UserEntity
@@ -96,7 +97,9 @@ class SignUpViewModel(private val repository: AppRepository): ViewModel()
                                 universityName = "",
                                 description = "",
                             ))
-                            intent.onClick
+                            intent.onClick()
+                            SharedPreferences(intent.context).userName = uiState.value.username
+                            SharedPreferences(intent.context).password = uiState.value.password
                         }
                         else
                         {

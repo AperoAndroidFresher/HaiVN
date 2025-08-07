@@ -5,7 +5,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -23,15 +22,11 @@ import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.NavDisplay
 import com.example.vnhai.feature.home.Home
 import com.example.vnhai.feature.library.LibraryScreen
-import com.example.vnhai.feature.library.LibraryViewModel
 import com.example.vnhai.feature.myplaylist.MyPlaylist
 import com.example.vnhai.feature.profile.Profile
-import com.example.vnhai.feature.profile.ProfileViewModel
-import com.example.vnhai.feature.signin.LoadingScreen
-import com.example.vnhai.feature.signin.SignInScreen
-import com.example.vnhai.feature.signin.SignInViewModel
-import com.example.vnhai.feature.signup.SignUpScreen
-import com.example.vnhai.feature.signup.SignUpViewModel
+import com.example.vnhai.feature.signin.Loading
+import com.example.vnhai.feature.signin.SignIn
+import com.example.vnhai.feature.signup.SignUp
 import com.example.vnhai.ui.theme.VNHaiTheme
 import kotlinx.coroutines.delay
 
@@ -44,9 +39,7 @@ sealed interface AppScreen{
     data object MyPlaylist: AppScreen
 }
 
-
 class MainActivity : ComponentActivity() {
-
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,12 +50,12 @@ class MainActivity : ComponentActivity() {
 
             VNHaiTheme (darkTheme = darkTheme) {
                 App(
-                    modifier = Modifier
-                        .fillMaxSize(),
                     darkTheme = darkTheme,
                     onThemeIconClick = {
                         darkTheme = !darkTheme
-                    }
+                    },
+                    modifier = Modifier
+                        .fillMaxSize(),
                 )
             }
         }
@@ -72,8 +65,8 @@ class MainActivity : ComponentActivity() {
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
 fun App(
-    modifier: Modifier = Modifier,
     darkTheme: Boolean,
+    modifier: Modifier = Modifier,
     onThemeIconClick: ()->Unit = {}
 ){
     var start by remember { mutableStateOf(true) }
@@ -84,7 +77,7 @@ fun App(
         when(targetCount)
         {
             true -> {
-                LoadingScreen(modifier = Modifier.fillMaxWidth())
+                Loading(modifier = modifier)
                 LaunchedEffect(Unit) {
                     delay(2000)
                     start = false
@@ -100,7 +93,7 @@ fun App(
                     entryProvider = { key ->
                         when(key){
                             AppScreen.SignIn -> NavEntry(key){
-                                SignInScreen(
+                                SignIn(
                                     onSignInButtonClick = {
                                         backStack.add(AppScreen.Home)
                                         backStack.subList(0, backStack.size - 1).clear() },
@@ -111,7 +104,7 @@ fun App(
                             }
 
                             AppScreen.SignUp -> NavEntry(key){
-                                SignUpScreen(
+                                SignUp(
                                     onSignUpClick = {backStack.add(AppScreen.SignIn)},
                                 )
                             }

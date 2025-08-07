@@ -1,6 +1,5 @@
 package com.example.vnhai.feature.signup
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -31,7 +30,7 @@ import com.example.vnhai.R
 import com.example.vnhai.feature.signin.MyOutLineTextField
 
 @Composable
-fun SignUpScreen(
+fun SignUp(
     modifier: Modifier = Modifier,
     onSignUpClick: () -> Unit = {},
     viewModel: SignUpViewModel = viewModel(factory = SignUpViewModel.Factory)
@@ -41,6 +40,8 @@ fun SignUpScreen(
     val state = viewModel.uiState.collectAsState()
 
     Column(
+        verticalArrangement = Arrangement.Top,
+        horizontalAlignment = Alignment.Companion.CenterHorizontally,
         modifier = modifier
             .fillMaxSize()
             .background(Color.Companion.Black)
@@ -49,8 +50,6 @@ fun SignUpScreen(
                 start = 20.dp,
                 end = 20.dp
             ),
-        verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.Companion.CenterHorizontally
     ) {
         Image(
             painterResource(R.drawable.logo_music_app),
@@ -66,9 +65,6 @@ fun SignUpScreen(
             color = Color.Companion.White
         )
         MyOutLineTextField(
-            modifier = Modifier.Companion
-                .fillMaxWidth()
-                .padding(top = 24.dp),
             leadingIcon = R.drawable.user_icon,
             isError = state.value.userError,
             value = state.value.username,
@@ -79,16 +75,16 @@ fun SignUpScreen(
             onFocused = { string, bool ->
                 viewModel.processIntent(SignUpIntent.EnterUserName(string))
                 viewModel.processIntent(SignUpIntent.ChangeUserError(bool))
-            }
-        )
-
-        MyOutLineTextField(
+            },
             modifier = Modifier.Companion
                 .fillMaxWidth()
                 .padding(top = 24.dp),
+        )
+
+        MyOutLineTextField(
             leadingIcon = R.drawable.password_icon,
             isError = state.value.passwordError,
-            password = state.value.passwordVisible,
+            isHidden = state.value.passwordVisible,
             value = state.value.password,
             containTrailing = true,
             placeholder = "Password",
@@ -101,18 +97,18 @@ fun SignUpScreen(
             onFocused = { string, bool ->
                 viewModel.processIntent(SignUpIntent.EnterPassword(string))
                 viewModel.processIntent(SignUpIntent.ChangePasswordError(bool))
-            }
-        )
-
-        MyOutLineTextField(
+            },
             modifier = Modifier.Companion
                 .fillMaxWidth()
                 .padding(top = 24.dp),
+        )
+
+        MyOutLineTextField(
             leadingIcon = R.drawable.password_icon,
             isError = state.value.confirmError,
             value = state.value.confirm,
             containTrailing = true,
-            password = state.value.confirmVisible,
+            isHidden = state.value.confirmVisible,
             placeholder = "Confirm password",
             onValueChange = {
                 viewModel.processIntent(SignUpIntent.EnterConfirm(it))
@@ -123,13 +119,13 @@ fun SignUpScreen(
             onFocused = { string, bool ->
                 viewModel.processIntent(SignUpIntent.EnterConfirm(string))
                 viewModel.processIntent(SignUpIntent.ChangeConfirmError(bool))
-            }
-        )
-
-        MyOutLineTextField(
+            },
             modifier = Modifier.Companion
                 .fillMaxWidth()
                 .padding(top = 24.dp),
+        )
+
+        MyOutLineTextField(
             leadingIcon = R.drawable.email_icon,
             isError = state.value.emailError,
             value = state.value.email,
@@ -140,25 +136,27 @@ fun SignUpScreen(
             onFocused = { string, bool ->
                 viewModel.processIntent(SignUpIntent.EnterEmail(string))
                 viewModel.processIntent(SignUpIntent.ChangeEmailError(bool))
-            }
+            },
+            modifier = Modifier.Companion
+                .fillMaxWidth()
+                .padding(top = 24.dp),
         )
 
         Row(
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.Companion.Bottom,
             modifier = modifier
                 .fillMaxSize()
                 .fillMaxWidth()
                 .padding(bottom = 50.dp),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.Companion.Bottom
         ) {
             MySignUpButton(
+                text = "Sign Up",
+                onClick = {viewModel.processIntent(SignUpIntent.SignUp(context, onSignUpClick))},
                 modifier = modifier
                     .fillMaxWidth()
                     .padding(top = 20.dp),
-                text = "Sign Up",
-                onClick = {
-                    viewModel.processIntent(SignUpIntent.SignUp(context = context, onClick = onSignUpClick))
-                })
+            )
         }
     }
 }
@@ -170,6 +168,10 @@ fun MySignUpButton(
     onClick: () -> Unit = {}
 ) {
     Button(
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color(0xff06A0B5)
+        ),
+        onClick = onClick,
         modifier = modifier
             .height(59.dp)
             .fillMaxWidth()
@@ -177,10 +179,6 @@ fun MySignUpButton(
                 color = Color(0xff06A0B5),
                 shape = androidx.compose.foundation.shape.RoundedCornerShape(50.dp)
             ),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = Color(0xff06A0B5)
-        ),
-        onClick = onClick
     ) {
         Text(
             textAlign = TextAlign.Companion.Center,

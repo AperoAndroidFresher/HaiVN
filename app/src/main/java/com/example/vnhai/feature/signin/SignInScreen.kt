@@ -21,11 +21,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -38,40 +40,40 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.vnhai.R
 
 @Composable
-fun LoadingScreen(
+fun Loading(
     modifier: Modifier = Modifier
 ) {
     Column(
+        verticalArrangement = Arrangement.Top,
+        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
             .fillMaxHeight()
-            .background(Color.Companion.Black)
+            .background(Color.Black)
             .padding(
                 top = 170.dp
             ),
-        verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.Companion.CenterHorizontally
     ) {
         Image(
             painterResource(R.drawable.logo_music_app),
             contentDescription = "Logo music app",
-            modifier = Modifier.Companion.size(278.dp, 248.dp)
+            modifier = Modifier.size(278.dp, 248.dp)
         )
 
         Text(
-            modifier = Modifier.Companion
-                .align(Alignment.Companion.CenterHorizontally),
             text = "Apero Music",
             style = TextStyle(
                 fontSize = 40.sp,
-                fontWeight = FontWeight.Companion.Bold
+                fontWeight = FontWeight.Bold
             ),
-            color = Color(0xFF427880)
+            color = Color(0xFF427880),
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally),
         )
     }
 }
 
 @Composable
-fun SignInScreen(
+fun SignIn(
     modifier: Modifier = Modifier,
     onSignUpTextClick: () -> Unit = {},
     onSignInButtonClick: () -> Unit = {},
@@ -79,53 +81,57 @@ fun SignInScreen(
 )
 {
     val state = viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        viewModel.processIntent(SignInIntent.LoadData(context))
+    }
 
     Column(
+        verticalArrangement = Arrangement.Top,
+        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
             .fillMaxSize()
-            .background(Color.Companion.Black)
+            .background(Color.Black)
             .padding(
                 top = 44.dp,
                 start = 20.dp,
                 end = 20.dp
             ),
-        verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.Companion.CenterHorizontally
     ) {
         Image(
             painterResource(R.drawable.logo_music_app),
             contentDescription = "Logo music app",
-            modifier = Modifier.Companion.size(278.dp, 248.dp)
+            modifier = Modifier.size(278.dp, 248.dp)
         )
+
         Text(
             text = "Login to your account",
             style = TextStyle(
                 fontSize = 28.sp,
-                fontWeight = FontWeight.Companion.Bold
+                fontWeight = FontWeight.Bold
             ),
-            color = Color.Companion.White
+            color = Color.White
         )
+
         MyOutLineTextField(
-            modifier = Modifier.Companion
-                .fillMaxWidth()
-                .padding(top = 16.dp),
             leadingIcon = R.drawable.user_icon,
             value = state.value.username,
             placeholder = "Username",
             onValueChange = {it ->
                 viewModel.processIntent(SignInIntent.EnterUserName(it))
             },
-            onFocused = { string, bool -> viewModel.processIntent(SignInIntent.EnterUserName(string)) }
+            onFocused = { string, bool -> viewModel.processIntent(SignInIntent.EnterUserName(string)) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp),
         )
 
         MyOutLineTextField(
-            modifier = Modifier.Companion
-                .fillMaxWidth()
-                .padding(top = 16.dp),
             leadingIcon = R.drawable.password_icon,
             value = state.value.password,
             containTrailing = true,
-            password = state.value.passwordVisible,
+            isHidden = state.value.passwordVisible,
             placeholder = "Password",
             onValueChange = {
                 viewModel.processIntent(SignInIntent.EnterPassword(it))
@@ -133,37 +139,40 @@ fun SignInScreen(
             onTrailingIconClick = {
                 viewModel.processIntent(SignInIntent.VisiblePassword)
             },
-            onFocused = { string, bool -> viewModel.processIntent(SignInIntent.EnterPassword(string))}
+            onFocused = { string, bool -> viewModel.processIntent(SignInIntent.EnterPassword(string))},
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp),
         )
 
         MyCheckBox(
-            modifier = Modifier.Companion
+            isChecked = state.value.checked,
+            onCheckedChange = {
+                viewModel.processIntent(SignInIntent.CheckRemember)
+            },
+            modifier = Modifier
                 .fillMaxWidth()
                 .padding(
                     top = 20.dp,
                     start = 8.dp
                 ),
-            checked = state.value.checked,
-            onCheckedChange = {
-                viewModel.processIntent(SignInIntent.CheckRemember)
-            }
         )
 
         MySignInButton(
+            text = "Login",
+            onClick = {viewModel.processIntent(SignInIntent.SignIn(context, onSignInButtonClick))},
             modifier = modifier
                 .fillMaxWidth()
                 .padding(top = 20.dp),
-            text = "Login",
-            onClick = onSignInButtonClick
         )
 
         LinkToSignUp(
+            onSignUpClick = onSignUpTextClick,
             modifier = modifier
                 .fillMaxSize()
                 .padding(
                     bottom = 50.dp
                 ),
-            onSignUpClick = onSignUpTextClick
         )
     }
 
@@ -174,7 +183,7 @@ fun MyOutLineTextField(
     modifier: Modifier = Modifier,
     leadingIcon: Int = 0,
     value: String = "",
-    password: Boolean = false,
+    isHidden: Boolean = false,
     placeholder: String = "",
     isError: Boolean = false,
     containTrailing: Boolean = false,
@@ -182,7 +191,7 @@ fun MyOutLineTextField(
     onValueChange: (String) -> Unit = {},
     onFocused: (String, Boolean) -> Unit = {_, _ ->},
 ){
-    val trailingIcon: Int = if(password)
+    val trailingIcon: Int = if(isHidden)
     {
         R.drawable.eye_icon
     }
@@ -192,25 +201,15 @@ fun MyOutLineTextField(
     }
     Column {
         OutlinedTextField(
-            modifier = modifier
-                .height(59.dp)
-                .background(
-                    color = Color(0xff1e1e1e),
-                    shape = RoundedCornerShape(10.dp)
-                ).onFocusChanged {
-                    if (it.isFocused) {
-                        onFocused("", false)
-                    }
-                },
-            shape = androidx.compose.foundation.shape.RoundedCornerShape(10.dp),
+            shape = RoundedCornerShape(10.dp),
             value = value,
             isError = isError,
             textStyle = TextStyle(
-                color = Color.Companion.White
+                color = Color.White
             ),
             leadingIcon = {
                 Icon(
-                    modifier = Modifier.Companion
+                    modifier = Modifier
                         .size(12.dp),
                     painter = painterResource(id = leadingIcon),
                     contentDescription = "Icon",
@@ -224,7 +223,7 @@ fun MyOutLineTextField(
                     fontSize = 16.sp,
                 )
             },
-            visualTransformation = if (password || !containTrailing) VisualTransformation.Companion.None else PasswordVisualTransformation(
+            visualTransformation = if (isHidden || !containTrailing) VisualTransformation.None else PasswordVisualTransformation(
                 '*'
             ),
             trailingIcon = {
@@ -232,26 +231,36 @@ fun MyOutLineTextField(
                     Icon(
                         painter = painterResource(id = trailingIcon),
                         contentDescription = "Icon",
-                        modifier = Modifier.Companion
+                        modifier = Modifier
                             .clickable(onClick = onTrailingIconClick)
                             .size(17.dp)
                     )
                 }
             },
-            onValueChange = onValueChange
+            onValueChange = onValueChange,
+            modifier = modifier
+                .height(59.dp)
+                .background(
+                    color = Color(0xff1e1e1e),
+                    shape = RoundedCornerShape(10.dp)
+                ).onFocusChanged {
+                    if (it.isFocused) {
+                        onFocused("", false)
+                    }
+                },
         )
 
         if (isError) {
             Text(
-                modifier = Modifier.Companion
+                modifier = Modifier
                     .padding(start = 16.dp)
                     .background(
-                        color = Color.Companion.Black
+                        color = Color.Black
                     ),
                 text = "Invalid format",
                 fontSize = 12.sp,
                 fontWeight = FontWeight(400),
-                color = Color.Companion.Red
+                color = Color.Red
             )
         }
     }
@@ -260,29 +269,29 @@ fun MyOutLineTextField(
 @Composable
 fun MyCheckBox(
     modifier: Modifier = Modifier,
-    checked: Boolean = false,
+    isChecked: Boolean = false,
     onCheckedChange: (Boolean) -> Unit = {}
 ) {
     Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
             .size(150.dp, 18.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.Companion.CenterVertically
     ) {
         Checkbox(
-            checked = checked,
+            checked = isChecked,
             colors = CheckboxDefaults.colors(
                 checkedColor = Color(0xff00c2cb),
                 uncheckedColor = Color(0xff00c2cb),
-                checkmarkColor = Color.Companion.White
+                checkmarkColor = Color.White
             ),
             onCheckedChange = onCheckedChange
         )
         Text(
             text = "Remember me",
-            fontWeight = FontWeight.Companion.Bold,
+            fontWeight = FontWeight.Bold,
             fontSize = 12.sp,
-            color = Color.Companion.White
+            color = Color.White
         )
     }
 }
@@ -294,6 +303,10 @@ fun MySignInButton(
     onClick: () -> Unit = {}
 ) {
     Button(
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color(0xff06A0B5)
+        ),
+        onClick = onClick,
         modifier = modifier
             .height(59.dp)
             .fillMaxWidth()
@@ -301,16 +314,12 @@ fun MySignInButton(
                 color = Color(0xff06A0B5),
                 shape = androidx.compose.foundation.shape.RoundedCornerShape(50.dp)
             ),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = Color(0xff06A0B5)
-        ),
-        onClick = onClick
     ) {
         Text(
-            textAlign = TextAlign.Companion.Center,
+            textAlign = TextAlign.Center,
             text = text,
             fontSize = 16.sp,
-            fontWeight = FontWeight.Companion.Bold
+            fontWeight = FontWeight.Bold
         )
     }
 }
@@ -318,29 +327,29 @@ fun MySignInButton(
 @Composable
 fun LinkToSignUp(
     modifier: Modifier,
-    onSignUpClick: () -> Unit
+    onSignUpClick: () -> Unit = {}
 ){
     Row(
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.Bottom,
         modifier = modifier
             .fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.Companion.Bottom
     ) {
         Text(
             text = "Don't have an account?",
             fontSize = 16.sp,
-            color = Color.Companion.White
+            color = Color.White
         )
 
         Text(
-            modifier = Modifier.Companion
+            text = "Sign Up",
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xff06A0B5),
+            modifier = Modifier
                 .clickable(
                     onClick = onSignUpClick
                 ),
-            text = "Sign Up",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Companion.Bold,
-            color = Color(0xff06A0B5)
         )
     }
 }
