@@ -59,6 +59,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.vnhai.R
 import com.example.vnhai.data.local.entity.MusicEntity
 import com.example.vnhai.data.local.entity.PlaylistEntity
+import com.example.vnhai.data.remote.model.MusicFRemote
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
@@ -92,7 +93,7 @@ fun LibraryScreen(
             onLocalClick = { viewModel.processIntent(LibraryIntent.ChangeDirection(true)) },
             onRemoteClick = {
                 viewModel.processIntent(LibraryIntent.ChangeDirection(false))
-                viewModel.processIntent(LibraryIntent.GetRemoteListMusic)
+                viewModel.processIntent(LibraryIntent.GetRemoteListMusic(context))
             }
         )
         if(state.value.isLocal)
@@ -100,7 +101,7 @@ fun LibraryScreen(
             if(state.value.hasPermission)
             {
                 LaunchedEffect(Unit) {
-                    viewModel.processIntent(LibraryIntent.LoadData(context))
+                    viewModel.processIntent(LibraryIntent.GetLocalListMusic(context))
                 }
                 Box {
                     LocalScreen(
@@ -169,7 +170,11 @@ fun LocalScreen(
 }
 
 @Composable
-fun RemoteScreen(){
+fun RemoteScreen(
+    modifier: Modifier = Modifier,
+    listMusic: List<MusicFRemote> = listOf(),
+    onAddToPlaylistClick: (MusicFRemote) -> Unit = {}
+){
 
 }
 

@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
@@ -18,6 +19,9 @@ import com.example.vnhai.AppApplication
 import com.example.vnhai.convertFromMilliSecondToMinuteAndSecond
 import com.example.vnhai.data.RemoteAppRepository
 import com.example.vnhai.data.local.entity.MusicEntity
+import com.example.vnhai.getNameMusicFromPath
+import com.example.vnhai.saveFileToExternalStorage
+import com.example.vnhai.saveFileToInternalStorage
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -44,7 +48,7 @@ class LibraryViewModel(private val remoteAppRepository: RemoteAppRepository): Vi
                 }
             }
 
-            is LibraryIntent.LoadData -> {
+            is LibraryIntent.GetLocalListMusic -> {
                 val listMusic = mutableListOf<MusicEntity>()
                 if(uiState.value.isLocal)
                 {
@@ -78,6 +82,7 @@ class LibraryViewModel(private val remoteAppRepository: RemoteAppRepository): Vi
                         }
                     }
                 }
+                Log.d("main", "libraryviewmodel ${listMusic.size}")
                 _uiState.update { currentState ->
                     currentState.copy(listMusic = listMusic)
                 }
@@ -112,12 +117,33 @@ class LibraryViewModel(private val remoteAppRepository: RemoteAppRepository): Vi
                 }
             }
 
-            LibraryIntent.GetRemoteListMusic -> {
+            is LibraryIntent.GetRemoteListMusic -> {
                 viewModelScope.launch {
                     val response = remoteAppRepository.getMusicFRemote()
                     when{
                         response.isSuccessful -> {
-                            val music = response.body()
+                            val listMusic = response.body()
+                            Log.d("main", "LibraryViewModel ${listMusic?.size}")
+                            listMusic?.forEach { music ->
+                                val responseMusic = remoteAppRepository.getMusicFRemoteMp3(getNameMusicFromPath(music.path))
+                                when
+                                {
+                                    responseMusic.isSuccessful -> {
+                                        Log.d("main", "LibraryViewModel ${responseMusic.body()}")
+                                        val music = responseMusic.body()
+                                        saveFileToInternalStorage(filesDir = intent.context.filesDir, fileName = "remote_music", content = music!!)
+                                    }
+                                    response.code() == 400 -> {Log.d("main", "LibraryViewModel bad request")}
+                                    response.code() == 401 -> {Log.d("main", "LibraryViewModel unauthorized")}
+                                    response.code() == 403 -> {Log.d("main", "LibraryViewModel forbidden")}
+                                    response.code() == 404 -> {Log.d("main", "LibraryViewModel not found")}
+                                    response.code() == 500 -> {Log.d("main", "LibraryViewModel internal server error")}
+                                    else -> {
+                                        Log.d("main", "LibraryViewModel eo biet")
+                                    }
+                                }
+
+                            }
                         }
                         response.code() == 400 -> {}
                         response.code() == 401 -> {}

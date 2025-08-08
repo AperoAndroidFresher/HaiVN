@@ -16,12 +16,12 @@ data class LibraryState(
 sealed interface LibraryIntent{
     data class AddToPlaylist(val music: MusicEntity): LibraryIntent
     data class Share(val music: MusicEntity): LibraryIntent
-    data class LoadData(val context: Context): LibraryIntent
+    data class GetLocalListMusic(val context: Context): LibraryIntent
     data class ChangeDirection(val isLocal: Boolean): LibraryIntent
     data class GetPermissionState(val context: Context): LibraryIntent
     data class ChangeVisiblePermissionDialog(val visible: Boolean): LibraryIntent
+    data class GetRemoteListMusic(val context: Context): LibraryIntent
     data object ChangeVisiblePlaylist: LibraryIntent
-    data object GetRemoteListMusic: LibraryIntent
 }
 
 sealed interface LibraryEvent

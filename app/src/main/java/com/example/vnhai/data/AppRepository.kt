@@ -5,6 +5,7 @@ import com.example.vnhai.data.local.entity.PlaylistEntity
 import com.example.vnhai.data.local.entity.UserEntity
 import com.example.vnhai.data.remote.model.MusicFRemote
 import kotlinx.coroutines.flow.Flow
+import okhttp3.ResponseBody
 import retrofit2.Response
 
 interface AppRepository {
@@ -37,4 +38,6 @@ interface AppRepository {
 
 interface RemoteAppRepository {
     suspend fun getMusicFRemote(): Response<List<MusicFRemote>>
+
+    suspend fun getMusicFRemoteMp3(musicName: String): Response<ResponseBody>
 }
