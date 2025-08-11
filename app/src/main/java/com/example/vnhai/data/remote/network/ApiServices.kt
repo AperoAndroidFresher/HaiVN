@@ -12,6 +12,6 @@ interface ApiServices {
     suspend fun getMusicFRemote(): Response<List<MusicFRemote>>
 
     @Streaming
-    @GET("/techtreck/{musicName}")
+    @GET("/techtrek/{musicName}")
     suspend fun getMusicFRemoteMp3(@Path("musicName") musicName: String): Response<ResponseBody>
 }

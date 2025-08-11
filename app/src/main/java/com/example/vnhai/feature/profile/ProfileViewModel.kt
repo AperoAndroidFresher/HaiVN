@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.AP
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.vnhai.AppApplication
-import com.example.vnhai.data.AppRepository
+import com.example.vnhai.data.LocalAppRepository
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
-class ProfileViewModel(private val repository: AppRepository): ViewModel(){
+class ProfileViewModel(private val repository: LocalAppRepository): ViewModel(){
     private val _uiState = MutableStateFlow<ProfileState>(ProfileState())
     val uiState: StateFlow<ProfileState> = _uiState.asStateFlow()
 
@@ -79,7 +79,7 @@ class ProfileViewModel(private val repository: AppRepository): ViewModel(){
     companion object{
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
-                val repository = (this[APPLICATION_KEY] as AppApplication).container.appRepository
+                val repository = (this[APPLICATION_KEY] as AppApplication).container.localAppRepository
                 ProfileViewModel(
                     repository = repository
                 )

@@ -1,12 +1,12 @@
 package com.example.vnhai.feature.myplaylist
 
-import com.example.vnhai.data.local.entity.MusicEntity
+import com.example.vnhai.data.local.entity.SongEntity
 import com.example.vnhai.data.local.entity.PlaylistEntity
 
 
 data class MyPlaylistState(
     val columnLayout: Boolean = true,
-    val listMusic: List<MusicEntity> = listOf<MusicEntity>(),
+    val listMusic: List<SongEntity> = listOf<SongEntity>(),
     val listPlaylist: List<PlaylistEntity> = listOf<PlaylistEntity>()
 )
 

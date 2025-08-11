@@ -4,25 +4,29 @@ import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
-import com.example.vnhai.data.local.entity.MusicEntity
+import com.example.vnhai.data.local.entity.SongEntity
 import com.example.vnhai.data.local.entity.PlaylistEntity
+import com.example.vnhai.data.local.entity.PlaylistSongCrossRef
+import com.example.vnhai.data.local.entity.PlaylistWithSongs
 import com.example.vnhai.data.local.entity.UserEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ManagerDao {
+    @Transaction
+    @Query("SELECT * FROM Playlist")
+    fun getPlaylistsWithSongs(): Flow<List<PlaylistWithSongs>>
+
     @Query("SELECT * FROM user")
     fun getListUser(): Flow<List<UserEntity>>
 
     @Query("SELECT * FROM playlist")
     fun getAllPlaylist(): Flow<List<PlaylistEntity>>
 
-    @Query("SELECT * FROM music")
-    fun getAllMusic(): Flow<List<MusicEntity>>
-
-    @Query("SELECT * FROM music WHERE playlistId = :playlistId")
-    fun getMusicByPlaylist(playlistId: Int): Flow<List<MusicEntity>>
+    @Query("SELECT * FROM song WHERE type = :type")
+    fun getAllMusicByType(type: String): Flow<List<SongEntity>>
 
     @Query("SELECT * FROM playlist WHERE userId = :userId" )
     fun getPlaylistByUser(userId: Int): Flow<List<PlaylistEntity>>
@@ -37,10 +41,13 @@ interface ManagerDao {
     suspend fun insertUser(user: UserEntity)
 
     @Insert
-    suspend fun insertMusic(vararg music: MusicEntity)
+    suspend fun insertMusic(music: SongEntity)
 
     @Insert
-    suspend fun insertPlaylist(vararg playlist: PlaylistEntity)
+    suspend fun insertPlaylist(playlist: PlaylistEntity)
+
+    @Insert
+    suspend fun insertSongToPlaylist(playlistSongCrossRef: PlaylistSongCrossRef)
 
     @Update
     suspend fun updatePlaylist(playlist: PlaylistEntity)
@@ -49,5 +56,9 @@ interface ManagerDao {
     suspend fun deletePlaylist(playlist: PlaylistEntity)
 
     @Delete
-    suspend fun deleteMusic(music: MusicEntity)
+    suspend fun deleteMusic(music: SongEntity)
+
+    @Delete
+    suspend fun deleteSongFromPlaylist(playlistSongCrossRef: PlaylistSongCrossRef)
+
 }

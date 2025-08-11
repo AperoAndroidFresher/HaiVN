@@ -13,14 +13,14 @@ import retrofit2.converter.moshi.MoshiConverterFactory
 import java.util.concurrent.TimeUnit
 
 interface AppContainer {
-    val appRepository: AppRepository
+    val localAppRepository: LocalAppRepository
     val remoteAppRepository: RemoteAppRepository
 }
 
 
 class AppDataContainer(private val context: Context) : AppContainer {
     //For local
-    override val appRepository: AppRepository by lazy {
+    override val localAppRepository: LocalAppRepository by lazy {
         LocalRepository(AppDatabase.getDatabase(context).managerDao())
     }
 

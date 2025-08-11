@@ -6,15 +6,9 @@ import androidx.room.PrimaryKey
 
 @Entity(
     tableName = "playlist",
-    foreignKeys = [ForeignKey(
-        entity = UserEntity::class,
-        parentColumns = arrayOf("id"),
-        childColumns = arrayOf("userId"),
-        onDelete = ForeignKey.CASCADE
-    )]
 )
 data class PlaylistEntity (
-    @PrimaryKey(autoGenerate = true) val id: Int,
+    @PrimaryKey(autoGenerate = true) val playlistId: Int,
     val name: String,
     val image: Int,
     val userId: Int,

@@ -4,11 +4,13 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.example.vnhai.data.local.entity.MusicEntity
+import com.example.vnhai.data.local.entity.SongEntity
 import com.example.vnhai.data.local.entity.PlaylistEntity
+import com.example.vnhai.data.local.entity.PlaylistSongCrossRef
+import com.example.vnhai.data.local.entity.PlaylistWithSongs
 import com.example.vnhai.data.local.entity.UserEntity
 
-@Database(entities = [UserEntity::class, MusicEntity::class, PlaylistEntity::class], version = 1, exportSchema = false)
+@Database(entities = [UserEntity::class, SongEntity::class, PlaylistEntity::class, PlaylistSongCrossRef::class], version = 1, exportSchema = false)
 abstract class AppDatabase : RoomDatabase(){
     abstract fun managerDao(): ManagerDao
 

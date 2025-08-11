@@ -1,21 +1,23 @@
 package com.example.vnhai.data
 
-import com.example.vnhai.data.local.entity.MusicEntity
+import com.example.vnhai.data.local.entity.SongEntity
 import com.example.vnhai.data.local.entity.PlaylistEntity
+import com.example.vnhai.data.local.entity.PlaylistSongCrossRef
+import com.example.vnhai.data.local.entity.PlaylistWithSongs
 import com.example.vnhai.data.local.entity.UserEntity
 import com.example.vnhai.data.remote.model.MusicFRemote
 import kotlinx.coroutines.flow.Flow
 import okhttp3.ResponseBody
 import retrofit2.Response
 
-interface AppRepository {
+interface LocalAppRepository {
     fun getListUser(): Flow<List<UserEntity>>
+
+    fun getPlaylistWithSong(): Flow<List<PlaylistWithSongs>>
 
     fun getAllPlaylist(): Flow<List<PlaylistEntity>>
 
-    fun getAllMusic(): Flow<List<MusicEntity>>
-
-    fun getMusicByPlaylist(playlistId: Int): Flow<List<MusicEntity>>
+    fun getAllMusicByType(type: String): Flow<List<SongEntity>>
 
     fun getPlaylistByUser(userId: Int): Flow<List<PlaylistEntity>>
 
@@ -25,15 +27,19 @@ interface AppRepository {
 
     suspend fun insertUser(user: UserEntity)
 
-    suspend fun insertMusic(vararg music: MusicEntity)
+    suspend fun insertSongToPlaylist(playlistSongCrossRef: PlaylistSongCrossRef)
 
-    suspend fun insertPlaylist(vararg playlist: PlaylistEntity)
+    suspend fun insertMusic(music: SongEntity)
+
+    suspend fun insertPlaylist(playlist: PlaylistEntity)
 
     suspend fun updatePlaylist(playlist: PlaylistEntity)
 
     suspend fun deletePlaylist(playlist: PlaylistEntity)
 
-    suspend fun deleteMusic(music: MusicEntity)
+    suspend fun deleteMusic(music: SongEntity)
+
+    suspend fun deleteSongFromPlaylist(playlistSongCrossRef: PlaylistSongCrossRef)
 }
 
 interface RemoteAppRepository {

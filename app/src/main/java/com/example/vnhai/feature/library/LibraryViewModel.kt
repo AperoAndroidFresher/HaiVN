@@ -16,12 +16,17 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.vnhai.AppApplication
+import com.example.vnhai.RemoteState
 import com.example.vnhai.convertFromMilliSecondToMinuteAndSecond
+import com.example.vnhai.data.LocalAppRepository
 import com.example.vnhai.data.RemoteAppRepository
-import com.example.vnhai.data.local.entity.MusicEntity
+import com.example.vnhai.data.local.LocalRepository
+import com.example.vnhai.data.local.entity.SongEntity
 import com.example.vnhai.getNameMusicFromPath
-import com.example.vnhai.saveFileToExternalStorage
 import com.example.vnhai.saveFileToInternalStorage
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -31,7 +36,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class LibraryViewModel(private val remoteAppRepository: RemoteAppRepository): ViewModel() {
+class LibraryViewModel(private val remoteAppRepository: RemoteAppRepository,
+    private val localAppRepository: LocalAppRepository
+): ViewModel() {
     private val _uiState = MutableStateFlow(LibraryState())
     val uiState: StateFlow<LibraryState> = _uiState.asStateFlow()
 
@@ -49,7 +56,7 @@ class LibraryViewModel(private val remoteAppRepository: RemoteAppRepository): Vi
             }
 
             is LibraryIntent.GetLocalListMusic -> {
-                val listMusic = mutableListOf<MusicEntity>()
+                var listMusic = mutableListOf<SongEntity>()
                 if(uiState.value.isLocal)
                 {
                     val contentResolver: ContentResolver = intent.context.contentResolver
@@ -78,13 +85,27 @@ class LibraryViewModel(private val remoteAppRepository: RemoteAppRepository): Vi
                             val data = it.getString(dataColumn)
                             val duration = convertFromMilliSecondToMinuteAndSecond(it.getString(durationColumn))
 
-                            listMusic.add(MusicEntity(link = data, name = title,author = artist, duration = duration))
+                            val song = SongEntity(
+                                link = data,
+                                name = title,
+                                author = artist,
+                                duration = duration,
+                                type = "local"
+                            )
+
+                            viewModelScope.launch(Dispatchers.IO) {
+                                localAppRepository.insertMusic(song)
+                            }
                         }
                     }
                 }
-                Log.d("main", "libraryviewmodel ${listMusic.size}")
-                _uiState.update { currentState ->
-                    currentState.copy(listMusic = listMusic)
+                viewModelScope.launch(Dispatchers.IO) {
+                    localAppRepository.getAllMusicByType(type = "local").collect {
+                        value ->
+                        _uiState.update { currentState ->
+                            currentState.copy(listMusic = value)
+                        }
+                    }
                 }
             }
 
@@ -118,38 +139,64 @@ class LibraryViewModel(private val remoteAppRepository: RemoteAppRepository): Vi
             }
 
             is LibraryIntent.GetRemoteListMusic -> {
-                viewModelScope.launch {
-                    val response = remoteAppRepository.getMusicFRemote()
-                    when{
-                        response.isSuccessful -> {
-                            val listMusic = response.body()
-                            Log.d("main", "LibraryViewModel ${listMusic?.size}")
-                            listMusic?.forEach { music ->
-                                val responseMusic = remoteAppRepository.getMusicFRemoteMp3(getNameMusicFromPath(music.path))
-                                when
-                                {
-                                    responseMusic.isSuccessful -> {
-                                        Log.d("main", "LibraryViewModel ${responseMusic.body()}")
-                                        val music = responseMusic.body()
-                                        saveFileToInternalStorage(filesDir = intent.context.filesDir, fileName = "remote_music", content = music!!)
+                viewModelScope.launch(Dispatchers.IO) {
+                    _uiState.update { currentState ->
+                        currentState.copy(remoteState = RemoteState.Loading)
+                    }
+                    try {
+                        val response = remoteAppRepository.getMusicFRemote()
+                        when{
+                            response.isSuccessful -> {
+                                val listMusic = response.body()
+                                listMusic?.map { music ->
+                                    async {
+                                        try {
+                                            val responseMusic = remoteAppRepository.getMusicFRemoteMp3(getNameMusicFromPath(music.path))
+                                            when
+                                            {
+                                                responseMusic.isSuccessful -> {
+                                                    val mp3 = responseMusic.body()
+                                                    val filePath = saveFileToInternalStorage(filesDir = intent.context.filesDir, fileName = "remote_music", content = mp3!!)
+                                                    val song = SongEntity(
+                                                        link = filePath,
+                                                        name = music.title,
+                                                        author = music.artist,
+                                                        duration = convertFromMilliSecondToMinuteAndSecond(music.duration),
+                                                        type = "remote"
+                                                    )
+
+                                                    localAppRepository.insertMusic(song)
+                                                }
+                                                else -> {
+                                                    _uiState.update { currentState ->
+                                                        currentState.copy(remoteState = RemoteState.Error)
+                                                    }
+                                                }
+                                            }
+                                        }catch (e: Exception)
+                                        {
+                                            _uiState.update { currentState ->
+                                                currentState.copy(remoteState = RemoteState.Error)
+                                            }
+                                        }
                                     }
-                                    response.code() == 400 -> {Log.d("main", "LibraryViewModel bad request")}
-                                    response.code() == 401 -> {Log.d("main", "LibraryViewModel unauthorized")}
-                                    response.code() == 403 -> {Log.d("main", "LibraryViewModel forbidden")}
-                                    response.code() == 404 -> {Log.d("main", "LibraryViewModel not found")}
-                                    response.code() == 500 -> {Log.d("main", "LibraryViewModel internal server error")}
-                                    else -> {
-                                        Log.d("main", "LibraryViewModel eo biet")
-                                    }
+                                }?.awaitAll()
+                                _uiState.update { currentState ->
+                                    currentState.copy(remoteState = RemoteState.Success)
                                 }
 
                             }
+                            else -> {
+                                _uiState.update { currentState ->
+                                    currentState.copy(remoteState = RemoteState.Error)
+                                }
+                            }
                         }
-                        response.code() == 400 -> {}
-                        response.code() == 401 -> {}
-                        response.code() == 403 -> {}
-                        response.code() == 404 -> {}
-                        response.code() == 500 -> {}
+                    }catch (e: Exception)
+                    {
+                        _uiState.update { currentState ->
+                            currentState.copy(remoteState = RemoteState.Error)
+                        }
                     }
                 }
             }
@@ -164,7 +211,8 @@ class LibraryViewModel(private val remoteAppRepository: RemoteAppRepository): Vi
         val Factory: ViewModelProvider.Factory = viewModelFactory{
             initializer {
                 val appRemoteRepository = (this[APPLICATION_KEY] as AppApplication).container.remoteAppRepository
-                LibraryViewModel(appRemoteRepository)
+                val appLocalRepository = (this[APPLICATION_KEY] as AppApplication).container.localAppRepository
+                LibraryViewModel(appRemoteRepository, appLocalRepository)
             }
         }
     }

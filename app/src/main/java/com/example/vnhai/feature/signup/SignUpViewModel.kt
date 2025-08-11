@@ -9,7 +9,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.vnhai.AppApplication
 import com.example.vnhai.SharedPreferences
-import com.example.vnhai.data.AppRepository
+import com.example.vnhai.data.LocalAppRepository
 import com.example.vnhai.isValidateEmail
 import com.example.vnhai.data.local.entity.UserEntity
 import com.example.vnhai.onlyLetters
@@ -22,7 +22,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class SignUpViewModel(private val repository: AppRepository): ViewModel()
+class SignUpViewModel(private val repository: LocalAppRepository): ViewModel()
 {
     private val _uiState = MutableStateFlow<SignUpState>(SignUpState())
     val uiState: StateFlow<SignUpState> = _uiState.asStateFlow()
@@ -156,7 +156,7 @@ class SignUpViewModel(private val repository: AppRepository): ViewModel()
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
-                val repository = (this[APPLICATION_KEY] as AppApplication).container.appRepository
+                val repository = (this[APPLICATION_KEY] as AppApplication).container.localAppRepository
                 SignUpViewModel(
                     repository = repository
                 )

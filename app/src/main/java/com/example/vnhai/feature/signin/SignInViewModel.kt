@@ -1,6 +1,5 @@
 package com.example.vnhai.feature.signin
 
-import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -10,8 +9,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.vnhai.AppApplication
 import com.example.vnhai.SharedPreferences
-import com.example.vnhai.data.AppRepository
-import kotlinx.coroutines.Dispatchers
+import com.example.vnhai.data.LocalAppRepository
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -21,7 +19,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class SignInViewModel(private val repository: AppRepository): ViewModel(){
+class SignInViewModel(private val repository: LocalAppRepository): ViewModel(){
     private val _uiState = MutableStateFlow<SignInState>(SignInState())
     val uiState: StateFlow<SignInState> = _uiState.asStateFlow()
 
@@ -96,7 +94,7 @@ class SignInViewModel(private val repository: AppRepository): ViewModel(){
     companion object{
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
-                val repository = (this[APPLICATION_KEY] as AppApplication).container.appRepository
+                val repository = (this[APPLICATION_KEY] as AppApplication).container.localAppRepository
                 SignInViewModel(
                     repository = repository
                 )

@@ -5,7 +5,6 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.media.MediaMetadataRetriever
 import android.os.Build
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
@@ -51,13 +50,20 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.animateLottieCompositionAsState
+import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.vnhai.R
-import com.example.vnhai.data.local.entity.MusicEntity
+import com.example.vnhai.RemoteState
+import com.example.vnhai.data.local.entity.SongEntity
 import com.example.vnhai.data.local.entity.PlaylistEntity
 import com.example.vnhai.data.remote.model.MusicFRemote
 
@@ -139,7 +145,15 @@ fun LibraryScreen(
         }
 
         else{
-            RemoteScreen()
+            RemoteScreen(
+                remoteState = state.value.remoteState,
+                onTryAgainClick = {
+                    viewModel.processIntent(LibraryIntent.GetRemoteListMusic(context))
+                },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(color = Color.Black),
+            )
         }
     }
 }
@@ -147,35 +161,50 @@ fun LibraryScreen(
 @Composable
 fun LocalScreen(
     modifier: Modifier = Modifier,
-    listMusic: List<MusicEntity> = listOf(),
-    onAddToPlaylistClick: (MusicEntity) -> Unit = {}
+    listMusic: List<SongEntity> = listOf(),
+    onAddToPlaylistClick: (SongEntity) -> Unit = {}
 )
 {
-    Box(modifier = modifier)
-    {
-        LazyColumn(
-            modifier = modifier
-                .padding(8.dp)
-        ){
-            items(listMusic) {
-                    music -> ColumnMusicLayout(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                music = music,
-                onAddToPlaylistClick = onAddToPlaylistClick,
-                onShareClick = {})
-            }
+    LazyColumn(
+        modifier = modifier
+            .padding(8.dp)
+    ){
+        items(listMusic) {
+                music -> ColumnMusicLayout(
+            modifier = Modifier
+                .fillMaxWidth(),
+            music = music,
+            onAddToPlaylistClick = onAddToPlaylistClick,
+            onShareClick = {})
         }
     }
 }
 
 @Composable
 fun RemoteScreen(
+    remoteState: RemoteState,
     modifier: Modifier = Modifier,
     listMusic: List<MusicFRemote> = listOf(),
-    onAddToPlaylistClick: (MusicFRemote) -> Unit = {}
+    onAddToPlaylistClick: (MusicFRemote) -> Unit = {},
+    onTryAgainClick: () -> Unit = {},
 ){
-
+    when(remoteState)
+    {
+        RemoteState.Loading -> {
+            LibraryLoadingScreen(modifier = modifier)
+        }
+        RemoteState.Error -> {
+            LibraryErrorScreen(
+                modifier = modifier,
+                onTryAgainClick = onTryAgainClick
+            )
+        }
+        RemoteState.Success -> {
+            LibrarySuccessScreen(
+                modifier = modifier,
+                )
+        }
+    }
 }
 
 @Composable
@@ -252,10 +281,10 @@ fun HeadLibrary(
 
 @Composable
 fun ColumnMusicLayout(
-    music: MusicEntity,
+    music: SongEntity,
     modifier: Modifier = Modifier,
-    onAddToPlaylistClick: (MusicEntity) -> Unit = {},
-    onShareClick: (MusicEntity) -> Unit = {}
+    onAddToPlaylistClick: (SongEntity) -> Unit = {},
+    onShareClick: (SongEntity) -> Unit = {}
 ){
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -299,10 +328,10 @@ fun ColumnMusicLayout(
 
 @Composable
 fun KebabMenu(
-    music: MusicEntity,
+    music: SongEntity,
     modifier: Modifier = Modifier,
-    onAddToPlaylistClick: (MusicEntity)->Unit = {},
-    onShareClick: (MusicEntity)->Unit = {}
+    onAddToPlaylistClick: (SongEntity)->Unit = {},
+    onShareClick: (SongEntity)->Unit = {}
 ) {
     var expanded by remember { mutableStateOf(false) }
     Box(
@@ -379,13 +408,20 @@ fun DrawImageFromPath(modifier: Modifier = Modifier, mp3FilePath: String) {
     }
 
     Box(modifier = modifier){
-        albumArtBitmap?.let {
+        if(albumArtBitmap != null){
             Image(
-                bitmap = it.asImageBitmap(),
+                bitmap = albumArtBitmap!!.asImageBitmap(),
                 contentDescription = "Album Art",
                 modifier = modifier
                     .size(53.dp),
             )
+        }
+        else
+        {
+            Box(modifier = Modifier
+                .size(53.dp)
+                .background(color = Color.White,
+                    shape = RoundedCornerShape(10.dp)))
         }
     }
 }
@@ -589,13 +625,112 @@ fun Playlist(
     }
 }
 
+@Composable
+fun LibraryLottieAnimation(
+    modifier: Modifier = Modifier
+) {
+    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.lottie_remote_item_loading))
+    val progress by animateLottieCompositionAsState(
+        composition,
+        iterations = LottieConstants.IterateForever,)
+    LottieAnimation(
+        composition = composition,
+        progress = { progress },
+        modifier = modifier,
+
+    )
+}
+
+@Composable
+fun LibraryLoadingScreen(modifier: Modifier = Modifier)
+{
+    LibraryLottieAnimation(modifier = modifier)
+}
+
+@Composable
+fun LibraryErrorScreen(
+    modifier: Modifier = Modifier,
+    onTryAgainClick: ()->Unit = {}
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+        modifier = modifier
+            .padding(
+                start = 60.dp,
+                end = 60.dp
+            ),
+    ) {
+        Image(
+            painter = painterResource(R.drawable.error_network_icon),
+            contentDescription = "Error network Icon",
+            modifier = Modifier
+                .size(110.dp, 110.dp)
+                .padding(10.dp)
+        )
+
+        Text(
+            text = "No internet connection, please check your connection again",
+            fontSize = 20.sp,
+            fontWeight = FontWeight(400),
+            color = Color.White,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .padding(10.dp)
+        )
+
+        Button(
+            onClick = onTryAgainClick,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFF00C2CB)
+            ),
+            shape = RoundedCornerShape(16),
+            modifier = Modifier
+                .size(150.dp, 72.dp)
+                .background(
+                    color = Color.Black,
+                    shape = RoundedCornerShape(16)
+                )
+                .padding(10.dp)
+        ) {
+            Text(
+                text = "Try again",
+                fontSize = 18.sp,
+                fontWeight = FontWeight(400),
+                modifier = Modifier
+            )
+        }
+    }
+}
+
+@Composable
+fun LibrarySuccessScreen(
+    modifier: Modifier = Modifier,
+    listMusic: List<SongEntity> = listOf(),
+    onAddToPlaylistClick: (SongEntity) -> Unit = {}
+) {
+    LazyColumn(
+        modifier = modifier
+            .padding(8.dp)
+    ){
+        items(listMusic) {
+                music -> ColumnMusicLayout(
+            modifier = Modifier
+                .fillMaxWidth(),
+            music = music,
+            onAddToPlaylistClick = onAddToPlaylistClick,
+            onShareClick = {})
+        }
+    }
+}
+
 @Preview
 @Composable
 fun PreviewLibrary()
 {
-    ChoosePlaylistDialog(
+    LibraryErrorScreen(
         modifier = Modifier
-            .size(353.dp, 458.dp),
-        isVisible = true
+            .fillMaxSize()
+            .background(color = Color.Black)
     )
 }

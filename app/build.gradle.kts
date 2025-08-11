@@ -42,6 +42,9 @@ android {
 }
 
 dependencies {
+    //Lottie
+    implementation (libs.lottie.compose.v666)
+
     // Retrofit with Moshi Converter
     implementation (libs.converter.moshi)
     // Moshi
