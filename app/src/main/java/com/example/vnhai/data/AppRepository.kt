@@ -15,6 +15,8 @@ interface LocalAppRepository {
 
     fun getPlaylistWithSong(): Flow<List<PlaylistWithSongs>>
 
+    fun getCurrentUser(userName: String): UserEntity
+
     fun getAllPlaylist(): Flow<List<PlaylistEntity>>
 
     fun getAllMusicByType(type: String): Flow<List<SongEntity>>

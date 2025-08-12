@@ -56,7 +56,15 @@ class LibraryViewModel(private val remoteAppRepository: RemoteAppRepository,
             }
 
             is LibraryIntent.GetLocalListMusic -> {
-                var listMusic = mutableListOf<SongEntity>()
+                viewModelScope.launch(Dispatchers.IO) {
+                    localAppRepository.getAllMusicByType(type = "local").collect {
+                            value ->
+                        _uiState.update { currentState ->
+                            currentState.copy(listLocalMusic = value)
+                        }
+                    }
+                }
+
                 if(uiState.value.isLocal)
                 {
                     val contentResolver: ContentResolver = intent.context.contentResolver
@@ -99,14 +107,6 @@ class LibraryViewModel(private val remoteAppRepository: RemoteAppRepository,
                         }
                     }
                 }
-                viewModelScope.launch(Dispatchers.IO) {
-                    localAppRepository.getAllMusicByType(type = "local").collect {
-                        value ->
-                        _uiState.update { currentState ->
-                            currentState.copy(listMusic = value)
-                        }
-                    }
-                }
             }
 
             is LibraryIntent.AddToPlaylist -> TODO()
@@ -139,10 +139,20 @@ class LibraryViewModel(private val remoteAppRepository: RemoteAppRepository,
             }
 
             is LibraryIntent.GetRemoteListMusic -> {
+                _uiState.update { currentState ->
+                    currentState.copy(remoteState = RemoteState.Loading)
+                }
+
                 viewModelScope.launch(Dispatchers.IO) {
-                    _uiState.update { currentState ->
-                        currentState.copy(remoteState = RemoteState.Loading)
+                    localAppRepository.getAllMusicByType(type = "remote").collect {
+                            value ->
+                        _uiState.update { currentState ->
+                            currentState.copy(listRemoteMusic = value)
+                        }
                     }
+                }
+
+                viewModelScope.launch(Dispatchers.IO) {
                     try {
                         val response = remoteAppRepository.getMusicFRemote()
                         when{
@@ -164,7 +174,6 @@ class LibraryViewModel(private val remoteAppRepository: RemoteAppRepository,
                                                         duration = convertFromMilliSecondToMinuteAndSecond(music.duration),
                                                         type = "remote"
                                                     )
-
                                                     localAppRepository.insertMusic(song)
                                                 }
                                                 else -> {
@@ -184,7 +193,6 @@ class LibraryViewModel(private val remoteAppRepository: RemoteAppRepository,
                                 _uiState.update { currentState ->
                                     currentState.copy(remoteState = RemoteState.Success)
                                 }
-
                             }
                             else -> {
                                 _uiState.update { currentState ->

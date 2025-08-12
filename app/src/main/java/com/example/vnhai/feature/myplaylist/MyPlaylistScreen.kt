@@ -1,5 +1,8 @@
 package com.example.vnhai.feature.myplaylist
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.media.MediaMetadataRetriever
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,12 +24,23 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,193 +48,163 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.vnhai.R
 import com.example.vnhai.data.local.entity.PlaylistEntity
-
-data class Music(
-    val image: Int,
-    val name: String,
-    val author: String,
-    val duration: String,
-)
-
-val listMusic = listOf<Music>(
-    Music(
-        R.drawable.music1,
-        "grainy days",
-        "moody",
-        "04:30"
-    ),
-    Music(
-        R.drawable.music2,
-        "Coffee",
-        "Kainbeats",
-        "04:30"
-    ),
-    Music(
-        R.drawable.music3,
-        "raindrops",
-        "rainyyxx",
-        "00:30"
-    ),
-    Music(
-        R.drawable.music4,
-        "Tokyo",
-        "SmYang",
-        "04:02"
-    ),
-    Music(
-        R.drawable.music5,
-        "Coffee",
-        "iamfinenow",
-        "04:02"
-    ),
-    Music(
-        R.drawable.music1,
-        "grainy days 2",
-        "moody",
-        "04:30"
-    ),
-    Music(
-        R.drawable.music2,
-        "Coffee 2",
-        "Kainbeats",
-        "04:30"
-    ),
-    Music(
-        R.drawable.music3,
-        "raindrops 2",
-        "rainyyxx",
-        "00:30"
-    ),
-    Music(
-        R.drawable.music4,
-        "Tokyo 2",
-        "SmYang",
-        "04:02"
-    ),
-    Music(
-        R.drawable.music5,
-        "Coffee 2",
-        "iamfinenow",
-        "04:02"
-    )
-)
+import com.example.vnhai.data.local.entity.SongEntity
 
 @Composable
 fun MyPlaylist(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: MyPlaylistViewModel = viewModel(factory = MyPlaylistViewModel.Factory)
 ) {
-    var columnLayout by remember { mutableStateOf(false) }
-    var listMusicState by remember { mutableStateOf(listMusic) }
-    var mutableListMusic = listMusicState.toMutableList()
-    PlaylistScreen(
+    val state = viewModel.uiState.collectAsState()
+
+    val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        viewModel.processIntent(MyPlaylistIntent.LoadListPlaylistWithSongs(context))
+    }
+
+    MyPlaylistScreen(
+        isCreateNewVisible = state.value.isCreateNewVisible,
+        myPlaylist = state.value.listPlaylistWithSongs.map { it->it.playlist },
+        newName = state.value.newPlaylistName,
+        onNewNameChange = {viewModel.processIntent(MyPlaylistIntent.EnterNewPlaylistName(it))},
+        onChangeCreateVisible = {viewModel.processIntent(MyPlaylistIntent.ChangeCreateNewVisible)},
+        onCreateClick = {viewModel.processIntent(MyPlaylistIntent.CreateNewPlaylist(context))},
         modifier = modifier
             .fillMaxSize()
-            .background(color = Color.Black),
-        columnLayout = columnLayout,
-        listMusic = listMusicState,
-        onLayoutClick = {
-            columnLayout = !columnLayout
-        },
-        onSoftClick = {
-            listMusicState = listMusicState.sortedBy { it.name }
-        },
-        onDeleteClick = { it ->
-            mutableListMusic.remove(it)
-            listMusicState = mutableListMusic
-        }
+            .background(color = Color.Black)
     )
 }
 
 
 @Composable
 fun MyPlaylistScreen(
+    isCreateNewVisible: Boolean,
+    newName: String,
     modifier: Modifier = Modifier,
     myPlaylist: List<PlaylistEntity> = listOf(),
-    onPlaylistClick: (PlaylistEntity)->Unit = {}
-){
-    LazyColumn (modifier = modifier){
-        items(myPlaylist) { playlist ->
-            Playlist(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable(
-                        onClick = { onPlaylistClick(playlist) }
-                    ),
-                playlist = playlist
-            )
-        }
-    }
-}
+    onPlaylistClick: (PlaylistEntity)->Unit = {},
+    onNewNameChange: (String) -> Unit = {},
+    onChangeCreateVisible: ()->Unit = {},
+    onCreateClick: ()->Unit = {}
 
-@Composable
-fun Playlist(
-    modifier: Modifier = Modifier,
-    playlist: PlaylistEntity
 ){
-    Row (
+    Column(
         modifier = modifier
-            .padding(8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ){
-        Row (
-            modifier = modifier,
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        PlaylistHead(
+            onAddPlaylistClick = onChangeCreateVisible,
+            modifier = Modifier
+                .padding(top = 50.dp)
+                .height(60.dp),
+        )
+
+        Box(modifier = modifier
         ){
-            Row {
-                Image(
-                    painter = painterResource(playlist.image),
-                    contentDescription = "Avatar"
+            if(myPlaylist.isEmpty())
+            {
+                EmptyPlaylistScreen(
+                    onAddPlaylistClick = onChangeCreateVisible,
+                    modifier = modifier
                 )
-                Column (
-                    modifier = Modifier
-                        .padding(
-                            start = 8.dp
-                        )
+            }
+            else
+            {
+                LazyColumn(
+                    modifier = modifier
                 ){
-                    Text(
-                        text = playlist.name,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                    Text(
-                        text = " songs",
-                        color = Color.White
-                    )
+                    items(myPlaylist) { playlist ->
+                        Playlist(
+                            playlist = playlist,
+                            modifier = modifier.fillMaxWidth()
+                        )
+                    }
                 }
             }
+
+            if(isCreateNewVisible)
+            {
+                CreateNewPlaylist(
+                    newName = newName,
+                    onNewNameChange = onNewNameChange,
+                    onDismissRequest = onChangeCreateVisible,
+                    onCancelClick = onChangeCreateVisible,
+                    onCreateClick = onCreateClick
+                )
+            }
         }
+
     }
 }
 
 @Composable
-fun PlaylistScreen(
+fun EmptyPlaylistScreen(
+    modifier: Modifier,
+    onAddPlaylistClick: ()->Unit = {}
+) {
+    Column (
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier
+    ){
+        Text(
+            modifier = Modifier
+                .padding(
+                    start = 50.dp,
+                    end = 50.dp,
+                    top = 70.dp),
+            text = "You don't have any playlists. Click the “+” button to add",
+            fontSize = 20.sp,
+            textAlign = TextAlign.Center,
+            fontWeight = FontWeight(400),
+            color = Color.White
+        )
+
+        Image(
+            modifier = Modifier
+                .padding(top = 25.dp)
+                .clickable(onClick = onAddPlaylistClick)
+                .size(86.dp),
+            painter = painterResource(R.drawable.add_playlist_icon),
+            contentDescription = "add playlist icon"
+        )
+    }
+}
+
+@Composable
+fun PlaylistSongs(
+    headName: String,
     modifier: Modifier = Modifier,
     columnLayout: Boolean = true,
-    listMusic: List<Music>,
+    listMusic: List<SongEntity>,
     onLayoutClick: () -> Unit = {},
     onSoftClick: () -> Unit = {},
-    onDeleteClick: (music:Music) -> Unit = {},
+    onDeleteClick: (music: SongEntity) -> Unit = {},
 )
 {
     Column(
         modifier = modifier
     ){
-        Head(
+        PlaylistSongsHead(
+            headName = headName,
+            columnLayout = columnLayout,
+            onLayoutClick = onLayoutClick,
+            onSoftClick = onSoftClick,
             modifier = Modifier
                 .padding(top = 50.dp)
                 .height(60.dp),
-            columnLayout = columnLayout,
-            onLayoutClick = onLayoutClick,
-            onSoftClick = onSoftClick
         )
 
         if (columnLayout)
@@ -261,7 +245,185 @@ fun PlaylistScreen(
 }
 
 @Composable
-fun Head(
+fun PlaylistHead(
+    modifier: Modifier = Modifier,
+    onAddPlaylistClick: ()->Unit = {},
+){
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+    )
+    {
+        Text(
+            modifier = Modifier
+                .align(Alignment.Center),
+            text = "My Playlist",
+            fontWeight = FontWeight.Bold,
+            fontSize = 25.sp,
+            color = Color.White
+        )
+
+        Icon(
+            painter = painterResource(R.drawable.add_playlist_mini_icon),
+            contentDescription = "layout icon",
+            tint = Color.White,
+            modifier = Modifier
+                .clickable(
+                    onClick = onAddPlaylistClick
+                )
+                .padding(end = 8.dp)
+                .size(25.dp, 25.dp)
+                .align(Alignment.CenterEnd),
+        )
+    }
+}
+
+@Composable
+fun CreateNewPlaylist(
+    modifier: Modifier = Modifier,
+    isVisible: Boolean = true,
+    newName: String = "",
+    onNewNameChange: (String)->Unit = {},
+    onDismissRequest: ()->Unit = {},
+    onCreateClick: ()->Unit = {},
+    onCancelClick: ()->Unit = {},
+){
+    if(isVisible)
+    {
+        Dialog(
+            onDismissRequest = onDismissRequest
+        ) {
+            Card(
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFF292929)
+                ),
+                modifier = modifier
+                    .size(353.dp, 216.dp),
+            ) {
+                Column (
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = modifier
+                        .fillMaxSize()
+                        .padding(20.dp)
+                ){
+                    Text(
+                        text = "New Playlist",
+                        fontWeight = FontWeight(700),
+                        fontSize = 20.sp,
+                        color = Color.White,
+                        modifier = modifier
+                            .padding(
+                                top = 10.dp,
+                                bottom = 32.dp
+                            )
+                    )
+
+                    TextField(
+                        value = newName,
+                        placeholder = {
+                            Text(
+                                text = "Give your playlist a title",
+                                color = Color(0xFF8A9A9D)
+                            )
+                        },
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color(0xFF292929),
+                            unfocusedContainerColor = Color(0xFF292929),
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            cursorColor = Color.White,
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White
+                        ),
+                        onValueChange = onNewNameChange
+                    )
+
+                    HorizontalDivider(
+                        modifier = modifier.fillMaxWidth()
+                    )
+
+                    Row (
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp)
+                    ){
+                        Button(
+                            onClick = onCancelClick,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF292929)
+                            )
+                        ) {
+                            Text(
+                                text = "Cancel",
+                                fontWeight = FontWeight(700),
+                                fontSize = 18.sp,
+                                color = Color.White
+                            )
+                        }
+
+                        VerticalDivider(
+                            modifier = modifier.fillMaxHeight()
+                        )
+
+                        Button(
+                            onClick = onCreateClick,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF292929)
+                            )
+                        ) {
+                            Text(
+                                text = "Create",
+                                fontWeight = FontWeight(700),
+                                fontSize = 18.sp,
+                                color = Color(0xFF00C2CB)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun Playlist(
+    modifier: Modifier = Modifier,
+    playlist: PlaylistEntity
+){
+    Row (verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = modifier
+            .padding(8.dp),
+        ){
+        Image(
+            painter = painterResource(R.drawable.music5),
+            contentDescription = "Avatar"
+        )
+        Column (
+            modifier = Modifier
+                .padding(
+                    start = 8.dp
+                )
+        ){
+            Text(
+                text = playlist.name,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+            Text(
+                text = " songs",
+                color = Color.White
+            )
+        }
+    }
+}
+
+@Composable
+fun PlaylistSongsHead(
+    headName: String,
     modifier: Modifier = Modifier,
     columnLayout: Boolean = true,
     onLayoutClick: ()->Unit = {},
@@ -276,7 +438,7 @@ fun Head(
         Text(
             modifier = Modifier
                 .align(Alignment.Center),
-            text = "My Playlist",
+            text = headName,
             fontWeight = FontWeight.Bold,
             fontSize = 25.sp,
             color = Color.White
@@ -313,15 +475,11 @@ fun Head(
     }
 }
 
-
 @Composable
 fun ColumnMusicLayout(
+    music: SongEntity,
     modifier: Modifier = Modifier,
-    music: Music = Music(R.drawable.music1,
-        "grainy days",
-        "moody",
-        "04:30"),
-    onDeleteClick: (Music)->Unit = {}
+    onDeleteClick: (SongEntity)->Unit = {}
 ){
     Row (
         modifier = modifier
@@ -335,10 +493,12 @@ fun ColumnMusicLayout(
             horizontalArrangement = Arrangement.SpaceBetween
         ){
             Row {
-                Image(
-                    painter = painterResource(music.image),
-                    contentDescription = "Avatar"
+
+                DrawImageFromPath(
+                    mp3FilePath = music.link,
+                    modifier = Modifier.size(53.dp)
                 )
+
                 Column (
                     modifier = Modifier
                         .padding(
@@ -380,14 +540,9 @@ fun ColumnMusicLayout(
 
 @Composable
 fun GridMusicLayout(
+    music: SongEntity,
     modifier: Modifier = Modifier,
-    music: Music = Music(
-        R.drawable.music1,
-        "grainy days",
-        "moody",
-        "04:30"
-    ),
-    onDeleteClick: (Music) -> Unit = {}
+    onDeleteClick: (SongEntity) -> Unit = {}
 ) {
     Column(
         modifier = modifier
@@ -396,13 +551,12 @@ fun GridMusicLayout(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box{
-            Image(
 
-                modifier = Modifier
-                    .size(100.dp, 100.dp),
-                painter = painterResource(music.image),
-                contentDescription = "Avatar"
+            DrawImageFromPath(
+                mp3FilePath = music.link,
+                modifier = Modifier.size(100.dp)
             )
+
             KebabMenu(
                 modifier = Modifier
                     .align(Alignment.TopEnd),
@@ -432,8 +586,8 @@ fun GridMusicLayout(
 @Composable
 fun KebabMenu(
     modifier: Modifier = Modifier,
-    music: Music,
-    onDeleteClick: (Music)->Unit = {}
+    music: SongEntity,
+    onDeleteClick: (SongEntity)->Unit = {}
 ) {
     var expanded by remember { mutableStateOf(false) }
     Box(
@@ -476,12 +630,60 @@ fun KebabMenu(
     }
 }
 
+@Composable
+fun DrawImageFromPath(modifier: Modifier = Modifier, mp3FilePath: String) {
+    var albumArtBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    val retriever = MediaMetadataRetriever()
+    try {
+        retriever.setDataSource(mp3FilePath)
+        val art = retriever.embeddedPicture
+        if (art != null) {
+            albumArtBitmap = BitmapFactory.decodeByteArray(art, 0, art.size)
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+    } finally {
+        retriever.release()
+    }
+
+    Box(modifier = modifier){
+        if(albumArtBitmap != null){
+            Image(
+                bitmap = albumArtBitmap!!.asImageBitmap(),
+                contentDescription = "Album Art",
+                modifier = modifier
+            )
+        }
+        else
+        {
+            Image(
+                painter = painterResource(R.drawable.music1),
+                contentDescription = "Album Art",
+                modifier = modifier
+            )
+        }
+    }
+}
+
 @Preview
 @Composable
-fun Preview1(){
-    MyPlaylist(
+fun PreviewMPS() {
+//    MyPlaylistScreen(
+//        isCreateNewVisible = false,
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .background(color = Color.Black)
+//    )
+}
+
+@Preview
+@Composable
+fun PreviewMPS2() {
+    PlaylistSongs(
+        headName = "Alolo",
+        listMusic = listOf(),
         modifier = Modifier
             .fillMaxSize()
-            .background(color = Color.Black),
+            .background(color = Color.Black)
     )
 }

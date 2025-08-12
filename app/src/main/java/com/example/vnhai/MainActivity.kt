@@ -9,7 +9,6 @@ import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -21,7 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.NavDisplay
 import com.example.vnhai.feature.home.Home
-import com.example.vnhai.feature.library.LibraryScreen
+import com.example.vnhai.feature.library.Library
 import com.example.vnhai.feature.myplaylist.MyPlaylist
 import com.example.vnhai.feature.profile.Profile
 import com.example.vnhai.feature.signin.Loading
@@ -130,7 +129,7 @@ fun App(
                             }
 
                             AppScreen.Library -> NavEntry(key){
-                                LibraryScreen(
+                                Library(
                                     navigationToPlaylist = {backStack.add(AppScreen.MyPlaylist)}
                                 )
                             }

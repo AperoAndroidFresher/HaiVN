@@ -8,7 +8,8 @@ import com.example.vnhai.data.remote.model.MusicFRemote
 data class LibraryState(
     val isLocal: Boolean = true,
     val isVisiblePlaylist: Boolean = false,
-    val listMusic: List<SongEntity> = listOf<SongEntity>(),
+    val listLocalMusic: List<SongEntity> = listOf<SongEntity>(),
+    val listRemoteMusic: List<SongEntity> = listOf<SongEntity>(),
     val remoteListMusic: List<MusicFRemote> = listOf<MusicFRemote>(),
     val hasPermission: Boolean = false,
     val isPermissionDialogVisible: Boolean = false,

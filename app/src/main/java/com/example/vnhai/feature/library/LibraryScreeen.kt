@@ -63,13 +63,12 @@ import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.vnhai.R
 import com.example.vnhai.RemoteState
-import com.example.vnhai.data.local.entity.SongEntity
 import com.example.vnhai.data.local.entity.PlaylistEntity
-import com.example.vnhai.data.remote.model.MusicFRemote
+import com.example.vnhai.data.local.entity.SongEntity
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
-fun LibraryScreen(
+fun Library(
     modifier: Modifier = Modifier,
     viewModel: LibraryViewModel = viewModel(factory = LibraryViewModel.Factory),
     navigationToPlaylist: () -> Unit,
@@ -78,10 +77,20 @@ fun LibraryScreen(
 
     val context = LocalContext.current
 
-    //Kiem tra va yeu cau quyen truy cap khi lan dau chuyen vao local.
-    LaunchedEffect(Unit) {
-        viewModel.processIntent(LibraryIntent.GetPermissionState(context))
+    LaunchedEffect(state.value.hasPermission) {
+        if(!state.value.hasPermission){
+            viewModel.processIntent(LibraryIntent.GetPermissionState(context))
+        }
+        else {
+            if (state.value.isLocal) {
+                viewModel.processIntent(LibraryIntent.GetLocalListMusic(context))
+            }
+            else{
+                viewModel.processIntent(LibraryIntent.GetRemoteListMusic(context))
+            }
+        }
     }
+
     val requestPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) {
@@ -96,63 +105,68 @@ fun LibraryScreen(
             .height(180.dp)
             .fillMaxWidth(),
             isLocal = state.value.isLocal,
-            onLocalClick = { viewModel.processIntent(LibraryIntent.ChangeDirection(true)) },
+            onLocalClick = {
+                viewModel.processIntent(LibraryIntent.ChangeDirection(true))
+                viewModel.processIntent(LibraryIntent.GetLocalListMusic(context))
+            },
             onRemoteClick = {
                 viewModel.processIntent(LibraryIntent.ChangeDirection(false))
                 viewModel.processIntent(LibraryIntent.GetRemoteListMusic(context))
             }
         )
-        if(state.value.isLocal)
+        if(state.value.hasPermission)
         {
-            if(state.value.hasPermission)
-            {
-                LaunchedEffect(Unit) {
-                    viewModel.processIntent(LibraryIntent.GetLocalListMusic(context))
-                }
-                Box {
+            Box {
+                if(state.value.isLocal)
+                {
                     LocalScreen(
+                        listMusic = state.value.listLocalMusic,
+                        onAddToPlaylistClick = {viewModel.processIntent(LibraryIntent.ChangeVisiblePlaylist)},
                         modifier = Modifier
                             .fillMaxSize()
                             .background(color = Color.Black),
-                        listMusic = state.value.listMusic,
-                        onAddToPlaylistClick = {viewModel.processIntent(LibraryIntent.ChangeVisiblePlaylist)}
-                    )
-
-                    ChoosePlaylistDialog(
-                        modifier = Modifier
-                            .size(353.dp, 458.dp),
-                        isVisible = state.value.isVisiblePlaylist,
-                        onDismissRequest = {viewModel.processIntent(LibraryIntent.ChangeVisiblePlaylist)},
-                        onAddPlaylistClick = {
-                            navigationToPlaylist()
-                            viewModel.processIntent(LibraryIntent.ChangeVisiblePlaylist)
-                        }
                     )
                 }
-            }
-            else
-            {
-                MyPermissionDialog(
+                else
+                {
+                    RemoteScreen(
+                        remoteState = state.value.remoteState,
+                        listMusic = state.value.listRemoteMusic,
+                        onAddToPlaylistClick = {
+                            navigationToPlaylist()
+                            viewModel.processIntent(LibraryIntent.ChangeVisiblePlaylist)
+                        },
+                        onTryAgainClick = {
+                            viewModel.processIntent(LibraryIntent.GetRemoteListMusic(context))
+                        },
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(color = Color.Black),
+                    )
+                }
+
+                ChoosePlaylistDialog(
                     modifier = Modifier
-                        .size(353.dp, 204.dp),
-                    isVisible = state.value.isPermissionDialogVisible,
-                    onAllowClick = {
-                        requestPermissionLauncher.launch(Manifest.permission.READ_MEDIA_AUDIO)
-                        requestPermissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)},
-                    onDontAllowClick = {viewModel.processIntent(LibraryIntent.ChangeVisiblePermissionDialog(false))},
+                        .size(353.dp, 458.dp),
+                    isVisible = state.value.isVisiblePlaylist,
+                    onDismissRequest = {viewModel.processIntent(LibraryIntent.ChangeVisiblePlaylist)},
+                    onAddPlaylistClick = {
+                        navigationToPlaylist()
+                        viewModel.processIntent(LibraryIntent.ChangeVisiblePlaylist)
+                    }
                 )
             }
         }
 
         else{
-            RemoteScreen(
-                remoteState = state.value.remoteState,
-                onTryAgainClick = {
-                    viewModel.processIntent(LibraryIntent.GetRemoteListMusic(context))
-                },
+            MyPermissionDialog(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .background(color = Color.Black),
+                    .size(353.dp, 204.dp),
+                isVisible = state.value.isPermissionDialogVisible,
+                onAllowClick = {
+                    requestPermissionLauncher.launch(Manifest.permission.READ_MEDIA_AUDIO)
+                    requestPermissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)},
+                onDontAllowClick = {viewModel.processIntent(LibraryIntent.ChangeVisiblePermissionDialog(false))},
             )
         }
     }
@@ -184,8 +198,8 @@ fun LocalScreen(
 fun RemoteScreen(
     remoteState: RemoteState,
     modifier: Modifier = Modifier,
-    listMusic: List<MusicFRemote> = listOf(),
-    onAddToPlaylistClick: (MusicFRemote) -> Unit = {},
+    listMusic: List<SongEntity> = listOf(),
+    onAddToPlaylistClick: (SongEntity) -> Unit = {},
     onTryAgainClick: () -> Unit = {},
 ){
     when(remoteState)
@@ -201,6 +215,8 @@ fun RemoteScreen(
         }
         RemoteState.Success -> {
             LibrarySuccessScreen(
+                listMusic = listMusic,
+                onAddToPlaylistClick = onAddToPlaylistClick,
                 modifier = modifier,
                 )
         }
@@ -418,10 +434,12 @@ fun DrawImageFromPath(modifier: Modifier = Modifier, mp3FilePath: String) {
         }
         else
         {
-            Box(modifier = Modifier
-                .size(53.dp)
-                .background(color = Color.White,
-                    shape = RoundedCornerShape(10.dp)))
+            Image(
+                painter = painterResource(R.drawable.music1),
+                contentDescription = "Album Art",
+                modifier = modifier
+                    .size(53.dp),
+            )
         }
     }
 }
@@ -549,6 +567,7 @@ fun ChoosePlaylistDialog(
                                     top = 70.dp),
                             text = "You don't have any playlists. Click the “+” button to add",
                             fontSize = 20.sp,
+                            textAlign = TextAlign.Center,
                             fontWeight = FontWeight(400),
                             color = Color.White
                         )
@@ -601,7 +620,7 @@ fun Playlist(
         ){
             Row {
                 Image(
-                    painter = painterResource(playlist.image),
+                    painter = painterResource(R.drawable.music5),
                     contentDescription = "Avatar"
                 )
                 Column (
@@ -728,9 +747,5 @@ fun LibrarySuccessScreen(
 @Composable
 fun PreviewLibrary()
 {
-    LibraryErrorScreen(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(color = Color.Black)
-    )
+
 }

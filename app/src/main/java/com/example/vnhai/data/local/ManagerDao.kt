@@ -3,6 +3,7 @@ package com.example.vnhai.data.local
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
@@ -18,6 +19,9 @@ interface ManagerDao {
     @Transaction
     @Query("SELECT * FROM Playlist")
     fun getPlaylistsWithSongs(): Flow<List<PlaylistWithSongs>>
+
+    @Query("SELECT * FROM user WHERE username = :username")
+    fun getCurrentUser(username: String): UserEntity
 
     @Query("SELECT * FROM user")
     fun getListUser(): Flow<List<UserEntity>>
@@ -40,10 +44,10 @@ interface ManagerDao {
     @Insert
     suspend fun insertUser(user: UserEntity)
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertMusic(music: SongEntity)
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertPlaylist(playlist: PlaylistEntity)
 
     @Insert
