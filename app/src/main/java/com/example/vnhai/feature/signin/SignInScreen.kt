@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
@@ -28,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -200,6 +202,7 @@ fun MyOutLineTextField(
         R.drawable.hide_eye_icon
     }
     Column {
+        val focusManager = LocalFocusManager.current
         OutlinedTextField(
             shape = RoundedCornerShape(10.dp),
             value = value,
@@ -223,6 +226,10 @@ fun MyOutLineTextField(
                     fontSize = 16.sp,
                 )
             },
+            singleLine = true,
+            keyboardActions = KeyboardActions(
+                onDone = { focusManager.clearFocus() }
+            ),
             visualTransformation = if (isHidden || !containTrailing) VisualTransformation.None else PasswordVisualTransformation(
                 '*'
             ),
@@ -243,7 +250,8 @@ fun MyOutLineTextField(
                 .background(
                     color = Color(0xff1e1e1e),
                     shape = RoundedCornerShape(10.dp)
-                ).onFocusChanged {
+                )
+                .onFocusChanged {
                     if (it.isFocused) {
                         onFocused("", false)
                     }

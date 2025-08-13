@@ -23,6 +23,12 @@ interface ManagerDao {
     @Query("SELECT * FROM user WHERE username = :username")
     fun getCurrentUser(username: String): UserEntity
 
+    @Query("SELECT * FROM song WHERE name = :songName")
+    fun getCurrentSong(songName: String): SongEntity
+
+    @Query("SELECT * FROM playlist WHERE name = :playlistName")
+    fun getCurrentPlaylist(playlistName: String): PlaylistEntity
+
     @Query("SELECT * FROM user")
     fun getListUser(): Flow<List<UserEntity>>
 
@@ -48,13 +54,13 @@ interface ManagerDao {
     suspend fun insertMusic(music: SongEntity)
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertPlaylist(playlist: PlaylistEntity)
+    suspend fun insertPlaylist(playlist: PlaylistEntity): Long
 
     @Insert
     suspend fun insertSongToPlaylist(playlistSongCrossRef: PlaylistSongCrossRef)
 
-    @Update
-    suspend fun updatePlaylist(playlist: PlaylistEntity)
+    @Update(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun updatePlaylist(playlist: PlaylistEntity): Int
 
     @Delete
     suspend fun deletePlaylist(playlist: PlaylistEntity)
@@ -65,4 +71,6 @@ interface ManagerDao {
     @Delete
     suspend fun deleteSongFromPlaylist(playlistSongCrossRef: PlaylistSongCrossRef)
 
+    @Update
+    suspend fun updateSongsOrder(playlistSongCrossRef: PlaylistSongCrossRef)
 }

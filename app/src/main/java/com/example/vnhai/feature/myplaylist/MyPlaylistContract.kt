@@ -11,7 +11,9 @@ data class MyPlaylistState(
     val columnLayout: Boolean = true,
     val listPlaylistWithSongs: List<PlaylistWithSongs> = listOf(),
     val isCreateNewVisible: Boolean = false,
-    val newPlaylistName: String = ""
+    val isRenameVisible: Boolean = false,
+    val newPlaylistName: String = "",
+    val currentPlaylistWithSongs: PlaylistWithSongs = PlaylistWithSongs(PlaylistEntity(name = "", userId = 0), listOf())
 )
 
 sealed interface MyPlaylistIntent{
@@ -19,13 +21,14 @@ sealed interface MyPlaylistIntent{
     data class CreateNewPlaylist(val context: Context): MyPlaylistIntent
     data class EnterNewPlaylistName(val newName: String): MyPlaylistIntent
     data object ChangeCreateNewVisible: MyPlaylistIntent
-
+    data object ChangeRenameVisible: MyPlaylistIntent
     data object RemovePlaylist: MyPlaylistIntent
-    data object RenamePlaylist: MyPlaylistIntent
+    data class RenamePlaylist(val context: Context): MyPlaylistIntent
+    data class SetCurrentPlaylistWithSongs(val currentPlaylistWithSongs: PlaylistWithSongs): MyPlaylistIntent
+
     data object RemoveFromPlaylist: MyPlaylistIntent
     data object ChangeLayout: MyPlaylistIntent
 }
 
 sealed interface MyPlaylistEvent{
-
 }

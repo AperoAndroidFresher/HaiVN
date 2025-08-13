@@ -21,6 +21,7 @@ import com.example.vnhai.convertFromMilliSecondToMinuteAndSecond
 import com.example.vnhai.data.LocalAppRepository
 import com.example.vnhai.data.RemoteAppRepository
 import com.example.vnhai.data.local.LocalRepository
+import com.example.vnhai.data.local.entity.PlaylistSongCrossRef
 import com.example.vnhai.data.local.entity.SongEntity
 import com.example.vnhai.getNameMusicFromPath
 import com.example.vnhai.saveFileToInternalStorage
@@ -109,7 +110,14 @@ class LibraryViewModel(private val remoteAppRepository: RemoteAppRepository,
                 }
             }
 
-            is LibraryIntent.AddToPlaylist -> TODO()
+            is LibraryIntent.AddToPlaylist -> {
+                Log.d("main", "ForeignKey: ${uiState.value.currentSong.songId}")
+                viewModelScope.launch(Dispatchers.IO) {
+                    localAppRepository.insertSongToPlaylist(
+                        PlaylistSongCrossRef(intent.playlistWithSongs.playlist.playlistId, uiState.value.currentSong.songId, intent.playlistWithSongs.songs.size+1)
+                    )
+                }
+            }
             is LibraryIntent.Share -> TODO()
             LibraryIntent.ChangeVisiblePlaylist -> {
                 _uiState.update { currentState ->
@@ -204,6 +212,23 @@ class LibraryViewModel(private val remoteAppRepository: RemoteAppRepository,
                     {
                         _uiState.update { currentState ->
                             currentState.copy(remoteState = RemoteState.Error)
+                        }
+                    }
+                }
+            }
+
+            is LibraryIntent.SetCurrentSong -> {
+                _uiState.update { currentState ->
+                    currentState.copy(currentSong = intent.songs)
+                }
+            }
+
+            is LibraryIntent.LoadListPlaylistWithSongs -> {
+                viewModelScope.launch(Dispatchers.IO){
+                    localAppRepository.getPlaylistWithSong().collect {
+                            listPlaylistWithSongs ->
+                        _uiState.update { currentState ->
+                            currentState.copy(listPlaylistWithSongs = listPlaylistWithSongs)
                         }
                     }
                 }

@@ -12,6 +12,7 @@ import androidx.room.ForeignKey
             childColumns = ["playlistId"],
             onDelete = ForeignKey.CASCADE
         ),
+
         ForeignKey(
             entity = SongEntity::class,
             parentColumns = ["songId"],
@@ -22,5 +23,6 @@ import androidx.room.ForeignKey
 
 data class PlaylistSongCrossRef(
     val playlistId: Int,
-    val songId: Int
+    val songId: Int,
+    val indexInPlaylist: Int,
 )

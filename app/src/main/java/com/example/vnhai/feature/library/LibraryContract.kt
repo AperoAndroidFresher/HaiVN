@@ -2,22 +2,27 @@ package com.example.vnhai.feature.library
 
 import android.content.Context
 import com.example.vnhai.RemoteState
+import com.example.vnhai.data.local.entity.PlaylistEntity
+import com.example.vnhai.data.local.entity.PlaylistWithSongs
 import com.example.vnhai.data.local.entity.SongEntity
 import com.example.vnhai.data.remote.model.MusicFRemote
+import com.example.vnhai.feature.myplaylist.MyPlaylistIntent
 
 data class LibraryState(
     val isLocal: Boolean = true,
     val isVisiblePlaylist: Boolean = false,
     val listLocalMusic: List<SongEntity> = listOf<SongEntity>(),
     val listRemoteMusic: List<SongEntity> = listOf<SongEntity>(),
-    val remoteListMusic: List<MusicFRemote> = listOf<MusicFRemote>(),
+    //val remoteListMusic: List<MusicFRemote> = listOf<MusicFRemote>(),
     val hasPermission: Boolean = false,
     val isPermissionDialogVisible: Boolean = false,
-    val remoteState: RemoteState = RemoteState.Loading
+    val remoteState: RemoteState = RemoteState.Loading,
+    val currentSong: SongEntity = SongEntity(name = "", link = "", author = "", duration = "", type = ""),
+    val listPlaylistWithSongs: List<PlaylistWithSongs> = listOf(),
 )
 
 sealed interface LibraryIntent{
-    data class AddToPlaylist(val music: SongEntity): LibraryIntent
+    data class AddToPlaylist(val playlistWithSongs: PlaylistWithSongs): LibraryIntent
     data class Share(val music: SongEntity): LibraryIntent
     data class GetLocalListMusic(val context: Context): LibraryIntent
     data class ChangeDirection(val isLocal: Boolean): LibraryIntent
@@ -25,7 +30,8 @@ sealed interface LibraryIntent{
     data class ChangeVisiblePermissionDialog(val visible: Boolean): LibraryIntent
     data class GetRemoteListMusic(val context: Context): LibraryIntent
     data object ChangeVisiblePlaylist: LibraryIntent
-
+    data class SetCurrentSong(val songs: SongEntity): LibraryIntent
+    data class LoadListPlaylistWithSongs(val context: Context): LibraryIntent
 }
 
 sealed interface LibraryEvent

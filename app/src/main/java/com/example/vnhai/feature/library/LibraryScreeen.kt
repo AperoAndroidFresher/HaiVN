@@ -64,6 +64,7 @@ import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.vnhai.R
 import com.example.vnhai.RemoteState
 import com.example.vnhai.data.local.entity.PlaylistEntity
+import com.example.vnhai.data.local.entity.PlaylistWithSongs
 import com.example.vnhai.data.local.entity.SongEntity
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -121,7 +122,12 @@ fun Library(
                 {
                     LocalScreen(
                         listMusic = state.value.listLocalMusic,
-                        onAddToPlaylistClick = {viewModel.processIntent(LibraryIntent.ChangeVisiblePlaylist)},
+                        onSongsClick = {  },
+                        onKebabMenuClick = { viewModel.processIntent(LibraryIntent.SetCurrentSong(it)) },
+                        onAddDropClick = {
+                            viewModel.processIntent(LibraryIntent.LoadListPlaylistWithSongs(context))
+                            viewModel.processIntent(LibraryIntent.ChangeVisiblePlaylist) },
+                        onShareDropClick = {  },
                         modifier = Modifier
                             .fillMaxSize()
                             .background(color = Color.Black),
@@ -132,10 +138,12 @@ fun Library(
                     RemoteScreen(
                         remoteState = state.value.remoteState,
                         listMusic = state.value.listRemoteMusic,
-                        onAddToPlaylistClick = {
-                            navigationToPlaylist()
-                            viewModel.processIntent(LibraryIntent.ChangeVisiblePlaylist)
-                        },
+                        onSongsClick = {  },
+                        onKebabMenuClick = { viewModel.processIntent(LibraryIntent.SetCurrentSong(it)) },
+                        onAddDropClick = {
+                            viewModel.processIntent(LibraryIntent.LoadListPlaylistWithSongs(context))
+                            viewModel.processIntent(LibraryIntent.ChangeVisiblePlaylist) },
+                        onShareDropClick = {},
                         onTryAgainClick = {
                             viewModel.processIntent(LibraryIntent.GetRemoteListMusic(context))
                         },
@@ -146,14 +154,16 @@ fun Library(
                 }
 
                 ChoosePlaylistDialog(
-                    modifier = Modifier
-                        .size(353.dp, 458.dp),
+                    listPlaylistWithSongs = state.value.listPlaylistWithSongs,
                     isVisible = state.value.isVisiblePlaylist,
                     onDismissRequest = {viewModel.processIntent(LibraryIntent.ChangeVisiblePlaylist)},
                     onAddPlaylistClick = {
                         navigationToPlaylist()
                         viewModel.processIntent(LibraryIntent.ChangeVisiblePlaylist)
-                    }
+                    },
+                    onPlaylistClick = {viewModel.processIntent(LibraryIntent.AddToPlaylist(it))},
+                    modifier = Modifier
+                        .size(353.dp, 458.dp),
                 )
             }
         }
@@ -176,7 +186,10 @@ fun Library(
 fun LocalScreen(
     modifier: Modifier = Modifier,
     listMusic: List<SongEntity> = listOf(),
-    onAddToPlaylistClick: (SongEntity) -> Unit = {}
+    onSongsClick: ()->Unit = {},
+    onKebabMenuClick: (SongEntity) -> Unit = {},
+    onAddDropClick: () -> Unit = {},
+    onShareDropClick: () -> Unit = {}
 )
 {
     LazyColumn(
@@ -188,8 +201,11 @@ fun LocalScreen(
             modifier = Modifier
                 .fillMaxWidth(),
             music = music,
-            onAddToPlaylistClick = onAddToPlaylistClick,
-            onShareClick = {})
+            onSongsClick = onSongsClick,
+            onKebabMenuClick = { onKebabMenuClick(music) },
+            onAddDropClick = onAddDropClick,
+            onShareDropClick = onShareDropClick,
+        )
         }
     }
 }
@@ -199,7 +215,10 @@ fun RemoteScreen(
     remoteState: RemoteState,
     modifier: Modifier = Modifier,
     listMusic: List<SongEntity> = listOf(),
-    onAddToPlaylistClick: (SongEntity) -> Unit = {},
+    onSongsClick: ()->Unit = {},
+    onKebabMenuClick: (SongEntity) -> Unit = {},
+    onAddDropClick: () -> Unit = {},
+    onShareDropClick: () -> Unit = {},
     onTryAgainClick: () -> Unit = {},
 ){
     when(remoteState)
@@ -216,7 +235,10 @@ fun RemoteScreen(
         RemoteState.Success -> {
             LibrarySuccessScreen(
                 listMusic = listMusic,
-                onAddToPlaylistClick = onAddToPlaylistClick,
+                onSongsClick = onSongsClick,
+                onKebabMenuClick = onKebabMenuClick,
+                onAddDropClick = onAddDropClick,
+                onShareDropClick = onShareDropClick,
                 modifier = modifier,
                 )
         }
@@ -299,8 +321,10 @@ fun HeadLibrary(
 fun ColumnMusicLayout(
     music: SongEntity,
     modifier: Modifier = Modifier,
-    onAddToPlaylistClick: (SongEntity) -> Unit = {},
-    onShareClick: (SongEntity) -> Unit = {}
+    onSongsClick: ()->Unit = {},
+    onKebabMenuClick: () -> Unit = {},
+    onAddDropClick: () -> Unit = {},
+    onShareDropClick: () -> Unit = {}
 ){
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -308,34 +332,45 @@ fun ColumnMusicLayout(
         modifier = modifier
             .padding(8.dp),
     ) {
-        DrawImageFromPath(mp3FilePath = music.link)
-        Column(
-            modifier = Modifier
-                .padding(
-                    start = 8.dp
-                )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = modifier
                 .weight(1f)
-        ) {
+                .clickable(onClick = onSongsClick)
+        ){
+            DrawImageFromPath(mp3FilePath = music.link)
+            Column(
+                modifier = Modifier
+                    .padding(
+                        start = 8.dp
+                    )
+                    .weight(1f)
+            ) {
+                Text(
+                    text = music.name,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+                Text(
+                    text = music.author,
+                    color = Color.White
+                )
+            }
             Text(
-                text = music.name,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-            Text(
-                text = music.author,
+                text = music.duration,
                 color = Color.White
             )
         }
-        Text(
-            text = music.duration,
-            color = Color.White
-        )
-        Spacer(modifier = Modifier.width(10.dp))
+
+        Spacer(modifier = Modifier
+            .width(10.dp)
+            .clickable(onClick = onSongsClick))
 
         KebabMenu(
             music = music,
-            onAddToPlaylistClick = onAddToPlaylistClick,
-            onShareClick = onShareClick,
+            onKebabMenuClick = onKebabMenuClick,
+            onAddDropClick = onAddDropClick,
+            onShareDropClick = onShareDropClick,
             modifier = Modifier
                 .size(25.dp),
         )
@@ -346,8 +381,9 @@ fun ColumnMusicLayout(
 fun KebabMenu(
     music: SongEntity,
     modifier: Modifier = Modifier,
-    onAddToPlaylistClick: (SongEntity)->Unit = {},
-    onShareClick: (SongEntity)->Unit = {}
+    onKebabMenuClick: ()->Unit = {},
+    onAddDropClick: ()->Unit = {},
+    onShareDropClick: ()->Unit = {}
 ) {
     var expanded by remember { mutableStateOf(false) }
     Box(
@@ -357,7 +393,8 @@ fun KebabMenu(
         IconButton(
             onClick = { expanded = !expanded },
             modifier = modifier
-                .size(24.dp, 24.dp),
+                .size(24.dp, 24.dp)
+                .clickable(onClick = onKebabMenuClick),
         ) {
             Icon(
                 painter = painterResource(R.drawable.kebab_menu),
@@ -379,7 +416,7 @@ fun KebabMenu(
                 text = { Text("Add to Playlist") },
                 onClick = {
                     expanded = false
-                    onAddToPlaylistClick(music)
+                    onAddDropClick()
                 },
                 leadingIcon = {
                     Icon(
@@ -393,7 +430,7 @@ fun KebabMenu(
                 text = { Text("Share") },
                 onClick = {
                     expanded = false
-                    onShareClick(music)
+                    onShareDropClick()
                 },
                 leadingIcon = {
                     Icon(
@@ -527,10 +564,10 @@ fun MyPermissionDialog(
 fun ChoosePlaylistDialog(
     modifier: Modifier = Modifier,
     isVisible: Boolean = false,
-    myPlaylist: List<PlaylistEntity> = listOf<PlaylistEntity>(),
+    listPlaylistWithSongs: List<PlaylistWithSongs> = listOf<PlaylistWithSongs>(),
     onDismissRequest: () -> Unit = {},
     onAddPlaylistClick: () -> Unit = {},
-    onPlaylistClick: (PlaylistEntity) -> Unit = {},
+    onPlaylistClick: (PlaylistWithSongs) -> Unit = {},
 ){
     if(isVisible)
     {
@@ -557,7 +594,7 @@ fun ChoosePlaylistDialog(
                         fontWeight = FontWeight(700),
                         color = Color.White
                     )
-                    if(myPlaylist.isEmpty())
+                    if(listPlaylistWithSongs.isEmpty())
                     {
                         Text(
                             modifier = Modifier
@@ -584,14 +621,14 @@ fun ChoosePlaylistDialog(
                     else
                     {
                         LazyColumn {
-                            items(myPlaylist){ playlist ->
+                            items(listPlaylistWithSongs){ playlistWithSongs ->
                                 Playlist(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clickable(
-                                            onClick = { onPlaylistClick(playlist) }
+                                            onClick = { onPlaylistClick(playlistWithSongs) }
                                         ),
-                                    playlist = playlist
+                                    playlistWithSongs = playlistWithSongs
                                 )
                             }
                         }
@@ -605,7 +642,7 @@ fun ChoosePlaylistDialog(
 @Composable
 fun Playlist(
     modifier: Modifier = Modifier,
-    playlist: PlaylistEntity
+    playlistWithSongs: PlaylistWithSongs,
 ){
     Row (
         verticalAlignment = Alignment.CenterVertically,
@@ -630,12 +667,12 @@ fun Playlist(
                         )
                 ){
                     Text(
-                        text = playlist.name,
+                        text = playlistWithSongs.playlist.name,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
                     Text(
-                        text = " songs",
+                        text = "${playlistWithSongs.songs.size} songs",
                         color = Color.White
                     )
                 }
@@ -726,7 +763,10 @@ fun LibraryErrorScreen(
 fun LibrarySuccessScreen(
     modifier: Modifier = Modifier,
     listMusic: List<SongEntity> = listOf(),
-    onAddToPlaylistClick: (SongEntity) -> Unit = {}
+    onSongsClick: ()->Unit = {},
+    onKebabMenuClick: (SongEntity) -> Unit = {},
+    onAddDropClick: () -> Unit = {},
+    onShareDropClick: () -> Unit = {}
 ) {
     LazyColumn(
         modifier = modifier
@@ -737,8 +777,11 @@ fun LibrarySuccessScreen(
             modifier = Modifier
                 .fillMaxWidth(),
             music = music,
-            onAddToPlaylistClick = onAddToPlaylistClick,
-            onShareClick = {})
+            onSongsClick = onSongsClick,
+            onKebabMenuClick = { onKebabMenuClick(music) },
+            onAddDropClick = onAddDropClick,
+            onShareDropClick = onShareDropClick,
+        )
         }
     }
 }
@@ -747,5 +790,4 @@ fun LibrarySuccessScreen(
 @Composable
 fun PreviewLibrary()
 {
-
 }

@@ -33,11 +33,7 @@ class LocalRepository(private val managerDao: ManagerDao): LocalAppRepository {
 
     override suspend fun insertMusic(music: SongEntity) = managerDao.insertMusic(music)
 
-    override suspend fun insertPlaylist(playlist: PlaylistEntity) {
-        if(!playlist.name.isEmpty()) {
-            managerDao.insertPlaylist(playlist)
-        }
-    }
+    override suspend fun insertPlaylist(playlist: PlaylistEntity) = managerDao.insertPlaylist(playlist)
 
     override suspend fun updatePlaylist(playlist: PlaylistEntity)  = managerDao.updatePlaylist(playlist)
 

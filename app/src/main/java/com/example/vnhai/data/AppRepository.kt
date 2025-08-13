@@ -33,9 +33,9 @@ interface LocalAppRepository {
 
     suspend fun insertMusic(music: SongEntity)
 
-    suspend fun insertPlaylist(playlist: PlaylistEntity)
+    suspend fun insertPlaylist(playlist: PlaylistEntity): Long
 
-    suspend fun updatePlaylist(playlist: PlaylistEntity)
+    suspend fun updatePlaylist(playlist: PlaylistEntity): Int
 
     suspend fun deletePlaylist(playlist: PlaylistEntity)
 

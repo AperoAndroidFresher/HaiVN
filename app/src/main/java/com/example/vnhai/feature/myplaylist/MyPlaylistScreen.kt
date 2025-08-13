@@ -3,9 +3,11 @@ package com.example.vnhai.feature.myplaylist
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.media.MediaMetadataRetriever
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,14 +19,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -47,9 +46,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -60,7 +63,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.vnhai.R
 import com.example.vnhai.data.local.entity.PlaylistEntity
-import com.example.vnhai.data.local.entity.SongEntity
+import com.example.vnhai.data.local.entity.PlaylistWithSongs
 
 @Composable
 fun MyPlaylist(
@@ -77,11 +80,19 @@ fun MyPlaylist(
 
     MyPlaylistScreen(
         isCreateNewVisible = state.value.isCreateNewVisible,
-        myPlaylist = state.value.listPlaylistWithSongs.map { it->it.playlist },
+        isRenameVisible = state.value.isRenameVisible,
+        listPlaylistWithSongs = state.value.listPlaylistWithSongs,
         newName = state.value.newPlaylistName,
         onNewNameChange = {viewModel.processIntent(MyPlaylistIntent.EnterNewPlaylistName(it))},
         onChangeCreateVisible = {viewModel.processIntent(MyPlaylistIntent.ChangeCreateNewVisible)},
-        onCreateClick = {viewModel.processIntent(MyPlaylistIntent.CreateNewPlaylist(context))},
+        onCreateClick = { viewModel.processIntent(MyPlaylistIntent.CreateNewPlaylist(context))},
+        onOKClick = { viewModel.processIntent(MyPlaylistIntent.RenamePlaylist(context)) },
+        onFocusedNewNameTextField = {viewModel.processIntent(MyPlaylistIntent.EnterNewPlaylistName(it))},
+        onChangeRenameVisible = {viewModel.processIntent(MyPlaylistIntent.ChangeRenameVisible)},
+        onPlaylistClick = {},
+        onKebabMenuClick = {it -> viewModel.processIntent(MyPlaylistIntent.SetCurrentPlaylistWithSongs(it))},
+        onRenameDropClick = {viewModel.processIntent(MyPlaylistIntent.ChangeRenameVisible)},
+        onDeleteDropClick = {viewModel.processIntent(MyPlaylistIntent.RemovePlaylist)},
         modifier = modifier
             .fillMaxSize()
             .background(color = Color.Black)
@@ -92,14 +103,20 @@ fun MyPlaylist(
 @Composable
 fun MyPlaylistScreen(
     isCreateNewVisible: Boolean,
+    isRenameVisible: Boolean,
     newName: String,
+    listPlaylistWithSongs: List<PlaylistWithSongs>,
     modifier: Modifier = Modifier,
-    myPlaylist: List<PlaylistEntity> = listOf(),
-    onPlaylistClick: (PlaylistEntity)->Unit = {},
     onNewNameChange: (String) -> Unit = {},
     onChangeCreateVisible: ()->Unit = {},
-    onCreateClick: ()->Unit = {}
-
+    onCreateClick: ()->Unit = {},
+    onOKClick: () -> Unit = {},
+    onDeleteDropClick: ()->Unit = {},
+    onKebabMenuClick: (PlaylistWithSongs) -> Unit = {},
+    onPlaylistClick: (PlaylistWithSongs) -> Unit = {},
+    onRenameDropClick: () -> Unit = {},
+    onFocusedNewNameTextField: (String) -> Unit = {},
+    onChangeRenameVisible: ()->Unit ={}
 ){
     Column(
         modifier = modifier
@@ -113,7 +130,7 @@ fun MyPlaylistScreen(
 
         Box(modifier = modifier
         ){
-            if(myPlaylist.isEmpty())
+            if(listPlaylistWithSongs.isEmpty())
             {
                 EmptyPlaylistScreen(
                     onAddPlaylistClick = onChangeCreateVisible,
@@ -122,28 +139,31 @@ fun MyPlaylistScreen(
             }
             else
             {
-                LazyColumn(
-                    modifier = modifier
-                ){
-                    items(myPlaylist) { playlist ->
-                        Playlist(
-                            playlist = playlist,
-                            modifier = modifier.fillMaxWidth()
-                        )
-                    }
-                }
-            }
-
-            if(isCreateNewVisible)
-            {
-                CreateNewPlaylist(
+                ListPlaylistScreen(
+                    listPlaylistWithSongs = listPlaylistWithSongs,
+                    isRenameVisible = isRenameVisible,
                     newName = newName,
+                    onPlaylistClick = onPlaylistClick,
+                    onKebabMenuClick = onKebabMenuClick,
+                    onDeleteDropClick = onDeleteDropClick,
+                    onRenameDropClick = onRenameDropClick,
+                    onChangeRenameVisible = onChangeRenameVisible,
                     onNewNameChange = onNewNameChange,
-                    onDismissRequest = onChangeCreateVisible,
-                    onCancelClick = onChangeCreateVisible,
-                    onCreateClick = onCreateClick
+                    onOKClick = onOKClick,
+                    onFocusedNewNameTextField = onFocusedNewNameTextField,
+                    modifier = modifier,
                 )
             }
+
+            CreateNewPlaylist(
+                newName = newName,
+                isVisible = isCreateNewVisible,
+                onNewNameChange = onNewNameChange,
+                onDismissRequest = onChangeCreateVisible,
+                onCancelClick = onChangeCreateVisible,
+                onCreateClick = onCreateClick,
+                onFocused = onFocusedNewNameTextField
+            )
         }
 
     }
@@ -184,63 +204,46 @@ fun EmptyPlaylistScreen(
 }
 
 @Composable
-fun PlaylistSongs(
-    headName: String,
+fun ListPlaylistScreen(
+    listPlaylistWithSongs: List<PlaylistWithSongs>,
+    isRenameVisible: Boolean,
+    newName: String,
     modifier: Modifier = Modifier,
-    columnLayout: Boolean = true,
-    listMusic: List<SongEntity>,
-    onLayoutClick: () -> Unit = {},
-    onSoftClick: () -> Unit = {},
-    onDeleteClick: (music: SongEntity) -> Unit = {},
-)
-{
-    Column(
-        modifier = modifier
-    ){
-        PlaylistSongsHead(
-            headName = headName,
-            columnLayout = columnLayout,
-            onLayoutClick = onLayoutClick,
-            onSoftClick = onSoftClick,
-            modifier = Modifier
-                .padding(top = 50.dp)
-                .height(60.dp),
-        )
-
-        if (columnLayout)
-        {
-            LazyColumn(
-                modifier = Modifier
-                    .weight(1f)
-            ){
-                items(listMusic) {
-                        music -> ColumnMusicLayout(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    music = music,
-                    onDeleteClick = onDeleteClick)
-                }
-            }
-        }
-        else
-        {
-            LazyVerticalGrid(
-                modifier = Modifier
-                    .background(color = Color.Black)
-                    .fillMaxHeight(),
-                columns = GridCells.Fixed(2),
-            ) {
-                items(listMusic) {
-                        music -> GridMusicLayout(
+    onDeleteDropClick: ()->Unit = {},
+    onKebabMenuClick: (PlaylistWithSongs) -> Unit = {},
+    onPlaylistClick: (PlaylistWithSongs) -> Unit = {},
+    onRenameDropClick: () -> Unit = {},
+    onChangeRenameVisible: ()->Unit = {},
+    onNewNameChange: (String)->Unit = {},
+    onOKClick: () -> Unit = {},
+    onFocusedNewNameTextField: (String)->Unit = {},
+) {
+    Box{
+        LazyColumn(
+            modifier = modifier
+        ){
+            items(listPlaylistWithSongs) { playlistWithSongs ->
+                Playlist(
+                    playlistWithSongs = playlistWithSongs,
+                    onPlaylistClick = { onPlaylistClick(playlistWithSongs) },
+                    onKebabMenuClick = { onKebabMenuClick(playlistWithSongs) },
+                    onDeleteDropClick = onDeleteDropClick,
+                    onRenameDropClick = onRenameDropClick,
                     modifier = modifier
                         .fillMaxWidth()
-                        .fillMaxHeight()
-                    ,
-                    music = music,
-                    onDeleteClick = onDeleteClick)
-                }
+                )
             }
         }
+
+        RenamePlaylist(
+            isVisible = isRenameVisible,
+            newName = newName,
+            onNewNameChange = onNewNameChange,
+            onDismissRequest = onChangeRenameVisible,
+            onCancelClick = onChangeRenameVisible,
+            onOKClick = onOKClick,
+            onFocused = onFocusedNewNameTextField
+        )
     }
 }
 
@@ -288,9 +291,11 @@ fun CreateNewPlaylist(
     onDismissRequest: ()->Unit = {},
     onCreateClick: ()->Unit = {},
     onCancelClick: ()->Unit = {},
+    onFocused: (String)->Unit = {},
 ){
     if(isVisible)
     {
+        val focusManager = LocalFocusManager.current
         Dialog(
             onDismissRequest = onDismissRequest
         ) {
@@ -300,7 +305,8 @@ fun CreateNewPlaylist(
                     containerColor = Color(0xFF292929)
                 ),
                 modifier = modifier
-                    .size(353.dp, 216.dp),
+                    .size(353.dp, 216.dp)
+                    .focusable(),
             ) {
                 Column (
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -337,7 +343,18 @@ fun CreateNewPlaylist(
                             focusedTextColor = Color.White,
                             unfocusedTextColor = Color.White
                         ),
-                        onValueChange = onNewNameChange
+                        singleLine = true,
+                        keyboardActions = KeyboardActions(
+                            onDone = { focusManager.clearFocus() }
+                        ),
+                        onValueChange = onNewNameChange,
+                        modifier = Modifier
+                            .onFocusChanged {
+                                if(it.isFocused)
+                                {
+                                    onFocused("")
+                                }
+                            }
                     )
 
                     HorizontalDivider(
@@ -369,7 +386,9 @@ fun CreateNewPlaylist(
                         )
 
                         Button(
-                            onClick = onCreateClick,
+                            onClick = {
+                                onCreateClick()
+                                focusManager.clearFocus()},
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color(0xFF292929)
                             )
@@ -388,206 +407,204 @@ fun CreateNewPlaylist(
     }
 }
 
-@Composable
-fun Playlist(
-    modifier: Modifier = Modifier,
-    playlist: PlaylistEntity
-){
-    Row (verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
-        modifier = modifier
-            .padding(8.dp),
-        ){
-        Image(
-            painter = painterResource(R.drawable.music5),
-            contentDescription = "Avatar"
-        )
-        Column (
-            modifier = Modifier
-                .padding(
-                    start = 8.dp
-                )
-        ){
-            Text(
-                text = playlist.name,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-            Text(
-                text = " songs",
-                color = Color.White
-            )
-        }
-    }
-}
 
 @Composable
-fun PlaylistSongsHead(
-    headName: String,
+fun RenamePlaylist(
     modifier: Modifier = Modifier,
-    columnLayout: Boolean = true,
-    onLayoutClick: ()->Unit = {},
-    onSoftClick: ()->Unit = {}
+    isVisible: Boolean = true,
+    newName: String = "",
+    onNewNameChange: (String)->Unit = {},
+    onDismissRequest: ()->Unit = {},
+    onOKClick: ()->Unit = {},
+    onCancelClick: ()->Unit = {},
+    onFocused: (String)->Unit = {},
 ){
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(8.dp)
-    )
+    if(isVisible)
     {
-        Text(
-            modifier = Modifier
-                .align(Alignment.Center),
-            text = headName,
-            fontWeight = FontWeight.Bold,
-            fontSize = 25.sp,
-            color = Color.White
-        )
-        Row (
-            modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .padding(
-                    end = 8.dp
+        val focusManager = LocalFocusManager.current
+
+        Dialog(
+            onDismissRequest = onDismissRequest
+        ) {
+            Card(
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFF292929)
                 ),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ){
-            Icon(
-                modifier = Modifier
-                    .clickable(
-                        onClick = onLayoutClick
-                    )
-                    .size(20.dp, 20.dp),
-                painter = painterResource(if(columnLayout) R.drawable.grid_icon else R.drawable.column_icon),
-                contentDescription = "layout icon",
-                tint = Color.White
-            )
-
-            Icon(
-                modifier = Modifier
-                    .clickable(onClick = onSoftClick)
-                    .size(25.dp, 25.dp),
-                painter = painterResource(R.drawable.soft_icon),
-                contentDescription = "soft_icon",
-                tint = Color.White
-            )
-        }
-    }
-}
-
-@Composable
-fun ColumnMusicLayout(
-    music: SongEntity,
-    modifier: Modifier = Modifier,
-    onDeleteClick: (SongEntity)->Unit = {}
-){
-    Row (
-        modifier = modifier
-            .padding(8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ){
-        Row (
-            modifier = modifier,
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ){
-            Row {
-
-                DrawImageFromPath(
-                    mp3FilePath = music.link,
-                    modifier = Modifier.size(53.dp)
-                )
-
+                modifier = modifier
+                    .size(353.dp, 216.dp)
+                    .focusable(),
+            ) {
                 Column (
-                    modifier = Modifier
-                        .padding(
-                            start = 8.dp
-                        )
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = modifier
+                        .fillMaxSize()
+                        .padding(20.dp)
                 ){
                     Text(
-                        text = music.name,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        text = "Rename Playlist",
+                        fontWeight = FontWeight(700),
+                        fontSize = 20.sp,
+                        color = Color.White,
+                        modifier = modifier
+                            .padding(
+                                top = 10.dp,
+                                bottom = 32.dp
+                            )
                     )
-                    Text(
-                        text = music.author,
-                        color = Color.White
+
+                    TextField(
+                        value = newName,
+                        placeholder = {
+                            Text(
+                                text = "Give your playlist a new name",
+                                color = Color(0xFF8A9A9D)
+                            )
+                        },
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color(0xFF292929),
+                            unfocusedContainerColor = Color(0xFF292929),
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            cursorColor = Color.White,
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White
+                        ),
+                        singleLine = true,
+                        keyboardActions = KeyboardActions(
+                            onDone = { focusManager.clearFocus() }
+                        ),
+                        onValueChange = onNewNameChange,
+                        modifier = Modifier
+                            .onFocusChanged {
+                                if(it.isFocused)
+                                {
+                                    onFocused("")
+                                }
+                            }
                     )
+
+                    HorizontalDivider(
+                        modifier = modifier.fillMaxWidth()
+                    )
+
+                    Row (
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp)
+                    ){
+                        Button(
+                            onClick = onCancelClick,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF292929)
+                            )
+                        ) {
+                            Text(
+                                text = "Cancel",
+                                fontWeight = FontWeight(700),
+                                fontSize = 18.sp,
+                                color = Color.White
+                            )
+                        }
+
+                        VerticalDivider(
+                            modifier = modifier.fillMaxHeight()
+                        )
+
+                        Button(
+                            onClick = {
+                                onOKClick()
+                                focusManager.clearFocus(force = true)},
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF292929)
+                            )
+                        ) {
+                            Text(
+                                text = "OK",
+                                fontWeight = FontWeight(700),
+                                fontSize = 18.sp,
+                                color = Color(0xFF00C2CB)
+                            )
+                        }
+                    }
                 }
             }
-            Row (
+        }
+    }
+}
+
+@Composable
+fun Playlist(
+    playlistWithSongs: PlaylistWithSongs,
+    modifier: Modifier = Modifier,
+    onPlaylistClick: ()->Unit = {},
+    onKebabMenuClick: ()->Unit = {},
+    onDeleteDropClick: ()->Unit = {},
+    onRenameDropClick: ()->Unit = {},
+){
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+            .padding(
+                start = 30.dp,
+                end = 30.dp,
+                top = 8.dp,
+                bottom = 8.dp
+            ),
+    ){
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .clickable(onClick = onPlaylistClick)
+        ) {
+            Image(
+                painter = painterResource(R.drawable.music5),
+                contentDescription = "Avatar",
                 modifier = Modifier
-                    .padding(
-                        end = 8.dp
-                    ),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                    .size(84.dp)
+            )
+            Column (
+                modifier = Modifier
+                    .padding(start = 8.dp)
             ){
                 Text(
-                    text = music.duration,
+                    text = playlistWithSongs.playlist.name,
+                    fontWeight = FontWeight(700),
+                    fontSize = 22.sp,
                     color = Color.White
                 )
-                Spacer(modifier = Modifier.width(10.dp))
-                KebabMenu(
-                    music = music,
-                    onDeleteClick = onDeleteClick
+                Text(
+                    text = "${playlistWithSongs.songs.size} songs",
+                    fontWeight = FontWeight(700),
+                    fontSize = 18.sp,
+                    color = Color(0xFF8A9A9D)
                 )
             }
         }
-    }
-}
 
-@Composable
-fun GridMusicLayout(
-    music: SongEntity,
-    modifier: Modifier = Modifier,
-    onDeleteClick: (SongEntity) -> Unit = {}
-) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Box{
-
-            DrawImageFromPath(
-                mp3FilePath = music.link,
-                modifier = Modifier.size(100.dp)
-            )
-
-            KebabMenu(
-                modifier = Modifier
-                    .align(Alignment.TopEnd),
-                music = music,
-                onDeleteClick = onDeleteClick
-            )
-        }
-        Text(
-            text = music.name,
-            fontWeight = FontWeight.Bold,
-            fontSize = 16.sp,
-            color = Color.White
+        Spacer(
+            modifier = Modifier
+                .weight(1f)
+                .clickable(onClick = onPlaylistClick)
         )
-        Text(
-            text = music.author,
-            fontSize = 12.sp,
-            color = Color.Gray
-        )
-        Text(
-            text = music.duration,
-            fontSize = 12.sp,
-            color = Color.White
+
+        KebabPlaylistMenu(
+            onKebabMenuClick = onKebabMenuClick,
+            onDeleteDropClick = onDeleteDropClick,
+            onRenameDropClick = onRenameDropClick,
+            modifier = Modifier
+                .size(30.dp)
         )
     }
 }
 
 @Composable
-fun KebabMenu(
+fun KebabPlaylistMenu(
     modifier: Modifier = Modifier,
-    music: SongEntity,
-    onDeleteClick: (SongEntity)->Unit = {}
+    onKebabMenuClick: () -> Unit = {},
+    onDeleteDropClick: ()->Unit = {},
+    onRenameDropClick: ()->Unit = {},
 ) {
     var expanded by remember { mutableStateOf(false) }
     Box(
@@ -597,7 +614,10 @@ fun KebabMenu(
         IconButton(
             modifier = modifier
                 .size(24.dp, 24.dp),
-            onClick = { expanded = !expanded }
+            onClick = {
+                expanded = !expanded
+                onKebabMenuClick()
+            }
         ) {
             Icon(
                 modifier = modifier
@@ -615,13 +635,26 @@ fun KebabMenu(
             onDismissRequest = { expanded = false }
         ) {
             DropdownMenuItem(
-                text = { Text("Delete") },
+                text = { Text("Remove Playlist") },
                 onClick = {
                     expanded = false
-                    onDeleteClick(music) },
+                    onDeleteDropClick() },
                 leadingIcon = {
                     Icon(
-                        painter = painterResource(R.drawable.baseline_delete_24),
+                        painter = painterResource(R.drawable.remove_icon),
+                        contentDescription = "leading delete icon"
+                    )
+                }
+            )
+
+            DropdownMenuItem(
+                text = { Text("Rename") },
+                onClick = {
+                    expanded = false
+                    onRenameDropClick() },
+                leadingIcon = {
+                    Icon(
+                        painter = painterResource(R.drawable.rename_icon),
                         contentDescription = "leading delete icon"
                     )
                 }
@@ -668,22 +701,10 @@ fun DrawImageFromPath(modifier: Modifier = Modifier, mp3FilePath: String) {
 @Preview
 @Composable
 fun PreviewMPS() {
-//    MyPlaylistScreen(
-//        isCreateNewVisible = false,
-//        modifier = Modifier
-//            .fillMaxSize()
-//            .background(color = Color.Black)
-//    )
-}
-
-@Preview
-@Composable
-fun PreviewMPS2() {
-    PlaylistSongs(
-        headName = "Alolo",
-        listMusic = listOf(),
+    Playlist(
+        playlistWithSongs = PlaylistWithSongs(PlaylistEntity(name = "ahaha", userId = 0), listOf()),
         modifier = Modifier
-            .fillMaxSize()
-            .background(color = Color.Black)
+            .fillMaxWidth()
     )
 }
+
