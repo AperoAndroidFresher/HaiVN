@@ -367,7 +367,6 @@ fun ColumnMusicLayout(
             .clickable(onClick = onSongsClick))
 
         KebabMenu(
-            music = music,
             onKebabMenuClick = onKebabMenuClick,
             onAddDropClick = onAddDropClick,
             onShareDropClick = onShareDropClick,
@@ -379,7 +378,6 @@ fun ColumnMusicLayout(
 
 @Composable
 fun KebabMenu(
-    music: SongEntity,
     modifier: Modifier = Modifier,
     onKebabMenuClick: ()->Unit = {},
     onAddDropClick: ()->Unit = {},
@@ -391,10 +389,10 @@ fun KebabMenu(
             .padding(4.dp)
     ) {
         IconButton(
-            onClick = { expanded = !expanded },
+            onClick = { expanded = !expanded
+                onKebabMenuClick()},
             modifier = modifier
-                .size(24.dp, 24.dp)
-                .clickable(onClick = onKebabMenuClick),
+                .size(24.dp, 24.dp),
         ) {
             Icon(
                 painter = painterResource(R.drawable.kebab_menu),

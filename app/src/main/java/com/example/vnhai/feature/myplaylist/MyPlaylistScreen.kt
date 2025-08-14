@@ -3,7 +3,6 @@ package com.example.vnhai.feature.myplaylist
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.media.MediaMetadataRetriever
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -41,13 +40,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
@@ -61,9 +59,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation3.runtime.NavEntry
+import androidx.navigation3.ui.NavDisplay
 import com.example.vnhai.R
 import com.example.vnhai.data.local.entity.PlaylistEntity
 import com.example.vnhai.data.local.entity.PlaylistWithSongs
+import com.example.vnhai.feature.playlistSongs.PlaylistSongs
+
+sealed interface PlaylistScreen
+{
+    data object MyPlaylist: PlaylistScreen
+    data object PlaylistSongs: PlaylistScreen
+}
 
 @Composable
 fun MyPlaylist(
@@ -78,24 +85,46 @@ fun MyPlaylist(
         viewModel.processIntent(MyPlaylistIntent.LoadListPlaylistWithSongs(context))
     }
 
-    MyPlaylistScreen(
-        isCreateNewVisible = state.value.isCreateNewVisible,
-        isRenameVisible = state.value.isRenameVisible,
-        listPlaylistWithSongs = state.value.listPlaylistWithSongs,
-        newName = state.value.newPlaylistName,
-        onNewNameChange = {viewModel.processIntent(MyPlaylistIntent.EnterNewPlaylistName(it))},
-        onChangeCreateVisible = {viewModel.processIntent(MyPlaylistIntent.ChangeCreateNewVisible)},
-        onCreateClick = { viewModel.processIntent(MyPlaylistIntent.CreateNewPlaylist(context))},
-        onOKClick = { viewModel.processIntent(MyPlaylistIntent.RenamePlaylist(context)) },
-        onFocusedNewNameTextField = {viewModel.processIntent(MyPlaylistIntent.EnterNewPlaylistName(it))},
-        onChangeRenameVisible = {viewModel.processIntent(MyPlaylistIntent.ChangeRenameVisible)},
-        onPlaylistClick = {},
-        onKebabMenuClick = {it -> viewModel.processIntent(MyPlaylistIntent.SetCurrentPlaylistWithSongs(it))},
-        onRenameDropClick = {viewModel.processIntent(MyPlaylistIntent.ChangeRenameVisible)},
-        onDeleteDropClick = {viewModel.processIntent(MyPlaylistIntent.RemovePlaylist)},
-        modifier = modifier
-            .fillMaxSize()
-            .background(color = Color.Black)
+    val backStack = remember { mutableStateListOf<PlaylistScreen>(PlaylistScreen.MyPlaylist) }
+
+    NavDisplay(
+        backStack = backStack,
+        onBack = {backStack.removeLastOrNull()},
+        entryProvider = { key ->
+            when(key){
+                PlaylistScreen.MyPlaylist -> NavEntry(key){
+                    MyPlaylistScreen(
+                        isCreateNewVisible = state.value.isCreateNewVisible,
+                        isRenameVisible = state.value.isRenameVisible,
+                        listPlaylistWithSongs = state.value.listPlaylistWithSongs,
+                        newName = state.value.newPlaylistName,
+                        onNewNameChange = {viewModel.processIntent(MyPlaylistIntent.EnterNewPlaylistName(it))},
+                        onChangeCreateVisible = {viewModel.processIntent(MyPlaylistIntent.ChangeCreateNewVisible)},
+                        onCreateClick = { viewModel.processIntent(MyPlaylistIntent.CreateNewPlaylist(context))},
+                        onOKClick = { viewModel.processIntent(MyPlaylistIntent.RenamePlaylist(context)) },
+                        onFocusedNewNameTextField = {viewModel.processIntent(MyPlaylistIntent.EnterNewPlaylistName(it))},
+                        onChangeRenameVisible = {viewModel.processIntent(MyPlaylistIntent.ChangeRenameVisible)},
+                        onPlaylistClick = {
+                            viewModel.processIntent(MyPlaylistIntent.SetCurrentPlaylistWithSongs(it))
+                            backStack.add(PlaylistScreen.PlaylistSongs) },
+                        onKebabMenuClick = {it -> viewModel.processIntent(MyPlaylistIntent.SetCurrentPlaylistWithSongs(it))},
+                        onRenameDropClick = {viewModel.processIntent(MyPlaylistIntent.ChangeRenameVisible)},
+                        onDeleteDropClick = {viewModel.processIntent(MyPlaylistIntent.RemovePlaylist)},
+                        modifier = modifier
+                            .fillMaxSize()
+                            .background(color = Color.Black)
+                    )
+                }
+                PlaylistScreen.PlaylistSongs -> NavEntry(key){
+                    PlaylistSongs(
+                        playlistWithSongs = state.value.currentPlaylistWithSongs,
+                        modifier = modifier
+                            .fillMaxSize()
+                            .background(color = Color.Black)
+                    )
+                }
+            }
+        }
     )
 }
 

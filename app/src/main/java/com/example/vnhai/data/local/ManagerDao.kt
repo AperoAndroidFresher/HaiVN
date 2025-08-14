@@ -56,7 +56,7 @@ interface ManagerDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertPlaylist(playlist: PlaylistEntity): Long
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertSongToPlaylist(playlistSongCrossRef: PlaylistSongCrossRef)
 
     @Update(onConflict = OnConflictStrategy.IGNORE)
@@ -71,6 +71,6 @@ interface ManagerDao {
     @Delete
     suspend fun deleteSongFromPlaylist(playlistSongCrossRef: PlaylistSongCrossRef)
 
-    @Update
+    @Update(onConflict = OnConflictStrategy.IGNORE)
     suspend fun updateSongsOrder(playlistSongCrossRef: PlaylistSongCrossRef)
 }

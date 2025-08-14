@@ -34,18 +34,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.vnhai.R
+import com.example.vnhai.data.local.entity.PlaylistEntity
+import com.example.vnhai.data.local.entity.PlaylistWithSongs
 import com.example.vnhai.data.local.entity.SongEntity
 import com.example.vnhai.feature.myplaylist.DrawImageFromPath
 
 @Composable
 fun PlaylistSongs(
-    headName: String,
     modifier: Modifier = Modifier,
     columnLayout: Boolean = true,
-    listMusic: List<SongEntity>,
+    playlistWithSongs: PlaylistWithSongs,
     onLayoutClick: () -> Unit = {},
     onSoftClick: () -> Unit = {},
     onDeleteClick: (music: SongEntity) -> Unit = {},
@@ -55,7 +57,7 @@ fun PlaylistSongs(
         modifier = modifier
     ){
         PlaylistSongsHead(
-            headName = headName,
+            headName = playlistWithSongs.playlist.name,
             columnLayout = columnLayout,
             onLayoutClick = onLayoutClick,
             onSoftClick = onSoftClick,
@@ -70,7 +72,7 @@ fun PlaylistSongs(
                 modifier = Modifier
                     .weight(1f)
             ){
-                items(listMusic) {
+                items(playlistWithSongs.songs) {
                         music -> ColumnMusicLayout(
                     modifier = Modifier
                         .fillMaxWidth(),
@@ -87,7 +89,7 @@ fun PlaylistSongs(
                     .fillMaxHeight(),
                 columns = GridCells.Fixed(2),
             ) {
-                items(listMusic) {
+                items(playlistWithSongs.songs) {
                         music -> GridMusicLayout(
                     modifier = modifier
                         .fillMaxWidth()
@@ -178,7 +180,7 @@ fun GridMusicLayout(
                 modifier = Modifier
                     .align(Alignment.TopEnd),
                 music = music,
-                onDeleteClick = onDeleteClick
+                onDeleteDropClick = onDeleteClick
             )
         }
         Text(
@@ -204,7 +206,8 @@ fun GridMusicLayout(
 fun KebabSongsMenu(
     modifier: Modifier = Modifier,
     music: SongEntity,
-    onDeleteClick: (SongEntity)->Unit = {}
+    onDeleteDropClick: (SongEntity)->Unit = {},
+    onShareDropClick: (SongEntity)->Unit = {}
 ) {
     var expanded by remember { mutableStateOf(false) }
     Box(
@@ -232,14 +235,28 @@ fun KebabSongsMenu(
             onDismissRequest = { expanded = false }
         ) {
             DropdownMenuItem(
-                text = { Text("Delete") },
+                text = { Text("Remove From Playlist") },
                 onClick = {
                     expanded = false
-                    onDeleteClick(music) },
+                    onDeleteDropClick(music) },
                 leadingIcon = {
                     Icon(
-                        painter = painterResource(R.drawable.baseline_delete_24),
+                        painter = painterResource(R.drawable.remove_icon),
                         contentDescription = "leading delete icon"
+                    )
+                }
+            )
+
+            DropdownMenuItem(
+                text = { Text("Share") },
+                onClick = {
+                    expanded = false
+                    onShareDropClick(music)
+                },
+                leadingIcon = {
+                    Icon(
+                        painter = painterResource(R.drawable.share_icon),
+                        contentDescription = "leading share icon"
                     )
                 }
             )
@@ -251,7 +268,9 @@ fun KebabSongsMenu(
 fun ColumnMusicLayout(
     music: SongEntity,
     modifier: Modifier = Modifier,
-    onDeleteClick: (SongEntity)->Unit = {}
+    onSongClick: ()->Unit = {},
+    onDeleteClick: (SongEntity)->Unit = {},
+    onShareClick: (SongEntity)->Unit = {}
 ){
     Row (
         modifier = modifier
@@ -264,7 +283,8 @@ fun ColumnMusicLayout(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ){
-            Row {
+            Row (modifier = Modifier
+                .clickable(onClick = onSongClick)){
 
                 DrawImageFromPath(
                     mp3FilePath = music.link,
@@ -288,7 +308,7 @@ fun ColumnMusicLayout(
                     )
                 }
             }
-
+            Spacer(modifier = Modifier.weight(1f).clickable(onClick = onSongClick))
             Row (
                 modifier = Modifier
                     .padding(
@@ -304,9 +324,19 @@ fun ColumnMusicLayout(
                 Spacer(modifier = Modifier.width(10.dp))
                 KebabSongsMenu(
                     music = music,
-                    onDeleteClick = onDeleteClick
+                    onDeleteDropClick = onDeleteClick
                 )
             }
         }
     }
+}
+
+@Preview
+@Composable
+fun PreviewLSS(){
+//    PlaylistSongs(
+//        playlistWithSongs = PlaylistWithSongs(PlaylistEntity(name = "Alolo", userId = 1), listOf())
+//    )
+
+    ColumnMusicLayout(music = SongEntity(link = "", name = "Sad song", author = "Hai", duration = "30000", type = "local"), modifier = Modifier.fillMaxWidth())
 }

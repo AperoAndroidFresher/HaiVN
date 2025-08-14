@@ -111,7 +111,6 @@ class LibraryViewModel(private val remoteAppRepository: RemoteAppRepository,
             }
 
             is LibraryIntent.AddToPlaylist -> {
-                Log.d("main", "ForeignKey: ${uiState.value.currentSong.songId}")
                 viewModelScope.launch(Dispatchers.IO) {
                     localAppRepository.insertSongToPlaylist(
                         PlaylistSongCrossRef(intent.playlistWithSongs.playlist.playlistId, uiState.value.currentSong.songId, intent.playlistWithSongs.songs.size+1)
